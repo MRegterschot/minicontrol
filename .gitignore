@@ -135,10 +135,10 @@ dist
 userdata/*.sqlite
 userdata/*.log
 userdata/*.json
-userdata/plugins/*
-userdata/migrations/*
-userdata/schemas/*
-!userdata/schemas/.gitkeep
-!userdata/migrations/.gitkeep
-!userdata/plugins/.gitkeep
+# userdata/plugins/*
+# userdata/migrations/*
+# userdata/schemas/*
+# !userdata/schemas/.gitkeep
+# !userdata/migrations/.gitkeep
+# !userdata/plugins/.gitkeep
 docker-compose.yml
