@@ -2,6 +2,7 @@ import Plugin from "../../../core/plugins";
 import Score from "../../../core/schemas/scores.model";
 import MMMPoints from "../../schemas/mmmpoints.model";
 import MMMRank from "../../schemas/mmmrank.model";
+import RanksWindow from "./ranksWindow";
 
 interface MMMScore {
     points: number;
@@ -10,6 +11,9 @@ interface MMMScore {
 
 export default class MMMLeaderboard extends Plugin {
     static depends: string[] = ["game:Trackmania"];
+
+    currentMapUid: string = "";
+    points: MMMPoints[] = [];
 
     async onLoad() {
         try {
@@ -21,6 +25,8 @@ export default class MMMLeaderboard extends Plugin {
 
         tmc.storage["db"].addModels([MMMRank, MMMPoints]);
         tmc.server.addListener("Trackmania.EndMap_Start", this.onEndMap, this);
+        tmc.server.addListener("Trackmania.BeginMap", this.onBeginMap, this);
+        tmc.chatCmd.addCommand("/ranks", this.cmdRanks.bind(this), "Display ranks");
     }
 
     async onUnload() {
@@ -30,7 +36,62 @@ export default class MMMLeaderboard extends Plugin {
             console.log(e.message);
         }
         tmc.server.removeListener("Trackmania.EndMap_Start", this.onEndMap.bind(this));
+        tmc.server.removeListener("Trackmania.BeginMap", this.onBeginMap.bind(this));
         tmc.server.removeListener("Trackmania.PlayerChat", this.onPlayerChat);
+        tmc.chatCmd.removeCommand("/ranks");
+    }
+
+    async onStart() {
+        const menu = tmc.storage["menu"];
+        if (menu) {
+            menu.addItem({
+                category: "Players",
+                title: "Show: Ranks",
+                action: "/ranks",
+            });
+        }
+        if (!tmc.maps.currentMap?.UId) return;
+        this.currentMapUid = tmc.maps.currentMap.UId;
+    }
+
+    async cmdRanks(login: string, args: string[]) {
+        const ranks = await MMMRank.findAll({
+            order: [["rank", "ASC"]],
+            include: [
+                {
+                    model: tmc.storage["db"].models["Player"],
+                    as: "player",
+                },
+            ],
+        });
+
+        let rankList = [];
+        for (const rank of ranks) {
+            rankList.push({
+                rank: rank.rank,
+                // @ts-expect-error
+                nickname: rank.player.nickname,
+                login: rank.login,
+                points: rank.totalPoints,
+            });
+        }
+
+        const window = new RanksWindow(login, this);
+        window.size = { width: 90, height: 95 };
+        window.title = `Server Ranks [${ranks.length}]`;
+        window.setItems(rankList);
+        window.setColumns([
+            { key: "rank", title: "Rank", width: 10 },
+            { key: "nickname", title: "Nickname", width: 50 },
+            { key: "points", title: "Points", width: 20 },
+        ]);
+
+        await window.display();
+    }
+
+    async onBeginMap(data: any) {
+        const map = data[0];
+        this.currentMapUid = map.UId;
     }
 
     async onEndMap(data: any) {
@@ -47,7 +108,7 @@ export default class MMMLeaderboard extends Plugin {
 
         const fullScores = this.calculateLogarithmicPoints(mapScores);
 
-        fullScores.forEach(async (fullScore) => {
+        for (const fullScore of fullScores) {
             const score = fullScore.score;
             const mmmScore = fullScore.mmmScore;
 
@@ -92,7 +153,9 @@ export default class MMMLeaderboard extends Plugin {
                     rank: mmmScore.rank,
                 });
             }
-        });
+        }
+
+        this.calculatePlayerRanks();
     }
 
     async onPlayerChat(data: any) {
@@ -115,6 +178,20 @@ export default class MMMLeaderboard extends Plugin {
         tmc.cli(msg);
     }
 
+    async calculatePlayerRanks() {
+        const players = await MMMRank.findAll();
+
+        const sortedPlayers = players.sort((a, b) => b.totalPoints - a.totalPoints);
+
+        sortedPlayers.forEach(async (player, index) => {
+            player.update({
+                rank: index + 1,
+            });
+        });
+
+        tmc.cli("Ranks updated!");
+    }
+
     calculateLogarithmicPoints(scores: Score[], minValue: number = 0.2, multiplier: number = 1000): { score: Score; mmmScore: MMMScore }[] {
         // Sort scores based on their score (lowest score is the best)
         const sortedScores = scores.sort((a, b) => (a.time && b.time ? a.time - b.time : 0));
@@ -134,17 +211,14 @@ export default class MMMLeaderboard extends Plugin {
             const normalizedPoints = (maxLog - logBase(position)) / maxLog;
 
             // Scale and shift the points to ensure a minimum value
-            const rawPoints = normalizedPoints * (1 - minValue) + minValue;
-
-            // Round the points up to the nearest integer
-            return Math.ceil(rawPoints);
+            return normalizedPoints * (1 - minValue) + minValue;
         };
 
         // Assign logarithmic points based on the position (which is determined by score)
         return scores.map((scoreEntry) => {
             // Find the index of the current scoreEntry in the sorted array
             const position = sortedScores.findIndex(item => item.login === scoreEntry.login) + 1;
-            const points = calculatePoints(position, total, minValue) * multiplier;
+            const points = Math.ceil(calculatePoints(position, total, minValue) * multiplier);
             const mmmScore = { points, rank: position } as MMMScore;
             return { score: scoreEntry, mmmScore };
         });
