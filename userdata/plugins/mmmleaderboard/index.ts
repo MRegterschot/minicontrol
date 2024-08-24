@@ -1,8 +1,11 @@
+import { time } from "console";
 import Plugin from "../../../core/plugins";
 import Score from "../../../core/schemas/scores.model";
 import MMMPoints from "../../schemas/mmmpoints.model";
 import MMMRank from "../../schemas/mmmrank.model";
+import PointsWindow from "./pointsWindow";
 import RanksWindow from "./ranksWindow";
+import { formatTime } from "../../../core/utils";
 
 interface MMMScore {
     points: number;
@@ -27,6 +30,7 @@ export default class MMMLeaderboard extends Plugin {
         tmc.server.addListener("Trackmania.EndMap_Start", this.onEndMap, this);
         tmc.server.addListener("Trackmania.BeginMap", this.onBeginMap, this);
         tmc.chatCmd.addCommand("/ranks", this.cmdRanks.bind(this), "Display ranks");
+        tmc.chatCmd.addCommand("/points", this.cmdPoints.bind(this), "Display points");
     }
 
     async onUnload() {
@@ -39,6 +43,7 @@ export default class MMMLeaderboard extends Plugin {
         tmc.server.removeListener("Trackmania.BeginMap", this.onBeginMap.bind(this));
         tmc.server.removeListener("Trackmania.PlayerChat", this.onPlayerChat);
         tmc.chatCmd.removeCommand("/ranks");
+        tmc.chatCmd.removeCommand("/points");
     }
 
     async onStart() {
@@ -48,6 +53,12 @@ export default class MMMLeaderboard extends Plugin {
                 category: "Players",
                 title: "Show: Ranks",
                 action: "/ranks",
+            });
+
+            menu.addItem({
+                category: "Map",
+                title: "Show: Points",
+                action: "/points",
             });
         }
         if (!tmc.maps.currentMap?.UId) return;
@@ -84,6 +95,47 @@ export default class MMMLeaderboard extends Plugin {
             { key: "rank", title: "Rank", width: 10 },
             { key: "nickname", title: "Nickname", width: 50 },
             { key: "points", title: "Points", width: 20 },
+        ]);
+
+        await window.display();
+    }
+
+    async cmdPoints(login: string, args: string[]) {
+        const points = await MMMPoints.findAll({
+            where: {
+                mapUid: this.currentMapUid,
+            },
+            order: [["rank", "ASC"]],
+            include: [
+                {
+                    model: tmc.storage["db"].models["Player"],
+                    as: "player",
+                },
+            ],
+        });
+
+        let pointsList = [];
+
+        for (const point of points) {
+            pointsList.push({
+                // @ts-expect-error
+                nickname: point.player.nickname,
+                login: point.login,
+                points: point.points,
+                rank: point.rank,
+                time: "$o" + formatTime(point.time ?? 0),
+            });
+        }
+
+        const window = new PointsWindow(login, this);
+        window.size = { width: 110, height: 95 };
+        window.title = `Map Points [${points.length}]`;
+        window.setItems(pointsList);
+        window.setColumns([
+            { key: "rank", title: "Rank", width: 10 },
+            { key: "nickname", title: "Nickname", width: 50 },
+            { key: "points", title: "Points", width: 20 },
+            { key: "time", title: "Time", width: 20 },
         ]);
 
         await window.display();
@@ -146,11 +198,13 @@ export default class MMMLeaderboard extends Plugin {
                     mapUid: mapUid,
                     points: mmmScore.points,
                     rank: mmmScore.rank,
+                    time: score.time,
                 });
             } else {
                 playerPoints.update({
                     points: mmmScore.points,
                     rank: mmmScore.rank,
+                    time: score.time,
                 });
             }
         }

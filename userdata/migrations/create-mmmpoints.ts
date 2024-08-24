@@ -20,6 +20,11 @@ export const up: Migration = async ({ context: sequelize }) => {
 			type: DataTypes.INTEGER,
 			allowNull: true,
 		},
+		time: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+            defaultValue: 0,
+		},
 		points: {
 			type: DataTypes.INTEGER,
 			allowNull: false,

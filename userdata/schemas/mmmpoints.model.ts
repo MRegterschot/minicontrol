@@ -17,6 +17,9 @@ class MMMPoints extends Model {
 	mapUid: string | undefined;
 
     @Column(DataType.INTEGER)
+    time!: number;
+
+    @Column(DataType.INTEGER)
     rank!: number | null;
 
     @Column(DataType.INTEGER)
