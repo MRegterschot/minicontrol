@@ -13,6 +13,7 @@
         "dependency-graph": "1.0.0",
         "gbx": "1.0.0-rc8",
         "lzo-ts": "0.2.3",
+        "mariadb": "^3.3.1",
         "mysql2": "3.10.2",
         "pg": "8.12.0",
         "pg-hstore": "2.3.4",

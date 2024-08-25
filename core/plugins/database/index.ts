@@ -57,7 +57,7 @@ export default class GenericDb extends Plugin {
     async onLoad() {
         let sequelize;
         const dbString = (process.env['DATABASE'] ?? "").split("://", 1)[0];
-        if (!["sqlite", "mysql", "postgres"].includes(dbString)) {
+        if (!["sqlite", "mysql", "postgres", "mariadb"].includes(dbString)) {
             tmc.cli("¤error¤Seems you .env is missing 'DATABASE=' define or the database not sqlite, mysql or postgres");
             process.exit(1);
         }
