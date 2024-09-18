@@ -4,8 +4,9 @@ import Score from "../../../core/schemas/scores.model";
 import MMMPoints from "../../schemas/mmmpoints.model";
 import MMMRank from "../../schemas/mmmrank.model";
 import PointsWindow from "./pointsWindow";
-import RanksWindow from "./ranksWindow";
-import { formatTime } from "../../../core/utils";
+import LeaderboardWindow from "./leaderboardWindow";
+import { clone, escape, formatTime } from "../../../core/utils";
+import Player from "../../../core/schemas/players.model";
 
 interface MMMScore {
     points: number;
@@ -16,7 +17,8 @@ export default class MMMLeaderboard extends Plugin {
     static depends: string[] = ["game:Trackmania"];
 
     currentMapUid: string = "";
-    points: MMMPoints[] = [];
+    leaderboard: MMMRank[] = [];
+    records: any[] = [];
 
     async onLoad() {
         try {
@@ -29,7 +31,7 @@ export default class MMMLeaderboard extends Plugin {
         tmc.storage["db"].addModels([MMMRank, MMMPoints]);
         tmc.server.addListener("Trackmania.EndMap_Start", this.onEndMap, this);
         tmc.server.addListener("Trackmania.BeginMap", this.onBeginMap, this);
-        tmc.chatCmd.addCommand("/ranks", this.cmdRanks.bind(this), "Display ranks");
+        tmc.chatCmd.addCommand("/leaderboard", this.cmdLeaderboard.bind(this), "Display MMM Leaderboard");
         tmc.chatCmd.addCommand("/points", this.cmdPoints.bind(this), "Display points");
     }
 
@@ -42,7 +44,7 @@ export default class MMMLeaderboard extends Plugin {
         tmc.server.removeListener("Trackmania.EndMap_Start", this.onEndMap.bind(this));
         tmc.server.removeListener("Trackmania.BeginMap", this.onBeginMap.bind(this));
         tmc.server.removeListener("Trackmania.PlayerChat", this.onPlayerChat);
-        tmc.chatCmd.removeCommand("/ranks");
+        tmc.chatCmd.removeCommand("/leaderboard");
         tmc.chatCmd.removeCommand("/points");
     }
 
@@ -51,8 +53,8 @@ export default class MMMLeaderboard extends Plugin {
         if (menu) {
             menu.addItem({
                 category: "Players",
-                title: "Show: Ranks",
-                action: "/ranks",
+                title: "Show: Leaderboard",
+                action: "/leaderboard",
             });
 
             menu.addItem({
@@ -63,9 +65,37 @@ export default class MMMLeaderboard extends Plugin {
         }
         if (!tmc.maps.currentMap?.UId) return;
         this.currentMapUid = tmc.maps.currentMap.UId;
+
+        await this.syncLeaderboard();
+        await this.syncRecords(this.currentMapUid);
+        // this.test();
     }
 
-    async cmdRanks(login: string, args: string[]) {
+    test() {
+        tmc.server.emit("TMC.PlayerFinish", [
+            "44f32K-wS_a7KYaNGmLeOw",
+            26419,
+            {
+                time: 5292120,
+                login: "44f32K-wS_a7KYaNGmLeOw",
+                accountid: "e387f7d8-afb0-4bf6-bb29-868d1a62de3b",
+                racetime: 26419,
+                laptime: 26419,
+                checkpointinrace: 1,
+                checkpointinlap: 1,
+                isendrace: true,
+                isendlap: true,
+                isinfinitelaps: false,
+                isindependentlaps: false,
+                curracecheckpoints: [],
+                curlapcheckpoints: [],
+                blockid: "#50331650",
+                speed: 8.79688,
+            },
+        ]);
+    }
+
+    async cmdLeaderboard(login: string, args: string[]) {
         const ranks = await MMMRank.findAll({
             order: [["rank", "ASC"]],
             include: [
@@ -81,15 +111,15 @@ export default class MMMLeaderboard extends Plugin {
             rankList.push({
                 rank: rank.rank,
                 // @ts-expect-error
-                nickname: rank.player.nickname,
+                nickname: escape(rank.player.nickname),
                 login: rank.login,
                 points: rank.totalPoints,
             });
         }
 
-        const window = new RanksWindow(login, this);
+        const window = new LeaderboardWindow(login, this);
         window.size = { width: 90, height: 95 };
-        window.title = `Server Ranks [${ranks.length}]`;
+        window.title = `Leaderboard [${ranks.length}]`;
         window.setItems(rankList);
         window.setColumns([
             { key: "rank", title: "Rank", width: 10 },
@@ -212,6 +242,46 @@ export default class MMMLeaderboard extends Plugin {
         this.calculatePlayerRanks();
     }
 
+    async syncLeaderboard() {
+        const ranks = await MMMRank.findAll({
+            order: [["rank", "ASC"]],
+            include: [Player],
+        });
+
+        this.leaderboard = ranks;
+
+        tmc.server.emit("Plugin.MMMLeaderboard.onSync", {
+            leaderboard: clone(this.leaderboard),
+        });
+    }
+
+    async syncRecords(mapUid: string) {
+        const scores = await Score.findAll({
+            where: {
+                mapUuid: mapUid
+            },
+            order: [
+                // Will escape title and validate DESC against a list of valid direction parameters
+                ['time', 'ASC'],
+                ['updatedAt', 'ASC'],
+            ],
+            include: [Player],
+        });
+
+        this.records = [];
+        let rank = 1;
+        for (const score of scores) {
+            score.rank = rank;
+            this.records.push(score);
+            rank += 1;
+        }
+
+        tmc.server.emit("Plugin.Records.onSync", {
+            mapUid: mapUid,
+            records: clone(this.records)
+        });
+    }
+
     async onPlayerChat(data: any) {
         if (data[0] == 0) return;
         if (data[2].startsWith("/")) return;
@@ -271,7 +341,7 @@ export default class MMMLeaderboard extends Plugin {
         // Assign logarithmic points based on the position (which is determined by score)
         return scores.map((scoreEntry) => {
             // Find the index of the current scoreEntry in the sorted array
-            const position = sortedScores.findIndex(item => item.login === scoreEntry.login) + 1;
+            const position = sortedScores.findIndex((item) => item.login === scoreEntry.login) + 1;
             const points = Math.ceil(calculatePoints(position, total, minValue) * multiplier);
             const mmmScore = { points, rank: position } as MMMScore;
             return { score: scoreEntry, mmmScore };
