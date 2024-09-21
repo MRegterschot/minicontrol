@@ -224,7 +224,7 @@ export default class MMMLeaderboard extends Plugin {
         });
         const nick = player.nickname.replaceAll(/\$[iwozs]/gi, "");
         const text = data[2];
-        let msg = `${nick}$z$s$fff »$ff0 ${text}`;
+        let msg = `${nick}$z$s$fff » ${text}`;
         if (playerRank?.rank && playerRank?.rank != 0) {
             msg = `[${playerRank?.rank}] ${msg}`;
         }
