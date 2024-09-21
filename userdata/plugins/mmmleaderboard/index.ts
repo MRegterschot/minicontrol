@@ -21,7 +21,7 @@ const rankNames: { [key: number]: any } = {
         name: "Bronze",
         color: "$B60",
     },
-    6000: {
+    5000: {
         name: "Silver",
         color: "$DDD",
     },
