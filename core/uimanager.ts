@@ -48,7 +48,7 @@ export default class UiManager {
             this.setUiProperty("Race_DisplayMessage", "visible", false);
             this.setUiProperty("Race_BestRaceViewer", "visible", false);
             this.setUiProperty("Race_DisplayMessage", "visible", false);
-            this.setUiProperty("Race_Record", "scale", 0.8);
+            // this.setUiProperty("Race_Record", "scale", 0.8);
             this.setUiProperty("Race_Countdown", "position", [155, -50]);
             await this.sendUiProperties();
         }
