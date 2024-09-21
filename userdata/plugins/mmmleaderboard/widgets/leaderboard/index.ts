@@ -19,7 +19,7 @@ export default class MMMWidget extends Plugin {
 
     async onPlayerConnect(player: Player) {
         const login = player.login;
-        this.updateWidget(login);
+        await this.updateWidget(login);
         if (this.widgets[login]) {
             await tmc.ui.displayManialink(this.widgets[login]);
         }
@@ -59,12 +59,12 @@ export default class MMMWidget extends Plugin {
 
     async updateWidgets() {
         for (const player of tmc.players.getAll()) {
-            this.updateWidget(player.login);
+            await this.updateWidget(player.login);
         }
         await tmc.ui.displayManialinks(Object.values(this.widgets));
     }
 
-    updateWidget(login: string) {
+    async updateWidget(login: string) {
         let widget = this.widgets[login];
         if (!widget) {
             widget = new Widget("userdata/plugins/mmmleaderboard/widgets/leaderboard/widget.twig");
@@ -91,7 +91,7 @@ export default class MMMWidget extends Plugin {
         }
 
         for (const rank of outLeaderboard) {
-            rank.nickname = escape(rank.player.nickname);
+            rank.nickname = escape(rank.player?.nickname ?? (await tmc.getPlayer(rank.login)).nickname);
         }
 
         widget.setData({ leaderboard: outLeaderboard });

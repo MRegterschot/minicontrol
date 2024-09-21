@@ -133,7 +133,9 @@ export default class MMMLeaderboard extends Plugin {
                 });
             }
 
-            scores.forEach(async (score, index) => {
+            let ranks = [];
+
+            for (let score of scores) {
                 let mmmScore = mmmScores.find((mmmScore) => mmmScore.score.login === score.login);
                 if (!mmmScore) return;
 
@@ -149,6 +151,7 @@ export default class MMMLeaderboard extends Plugin {
                     where: {
                         login: score.login,
                     },
+                    include: [Player]
                 });
 
                 if (playerRank) {
@@ -159,9 +162,18 @@ export default class MMMLeaderboard extends Plugin {
                     playerRank = await MMMRank.create({
                         login: score.login,
                         totalPoints: mmmScore.mmmScore.points,
+                        rank: mmmScore.mmmScore.rank
                     });
                 }
-            });
+
+                ranks.push(playerRank);
+            }
+
+            this.leaderboard = ranks;
+            
+            tmc.server.emit("Plugin.MMMLeaderboard.onSync", {
+            leaderboard: clone(this.leaderboard),
+        });
         } catch (e: any) {
             console.log(e);
         }
