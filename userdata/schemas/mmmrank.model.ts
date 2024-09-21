@@ -18,6 +18,11 @@ class MMMRank extends Model {
 
     @Column(DataType.INTEGER)
     totalPoints!: number;
+
+    @NotNull
+    @AllowNull(false)
+    @Column(DataType.STRING)
+    rankName!: string;
 }
 
 export default MMMRank;

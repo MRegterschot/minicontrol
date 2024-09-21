@@ -12,6 +12,45 @@ interface MMMScore {
     rank: number;
 }
 
+const rankNames: { [key: number]: any } = {
+    0: {
+        name: "Beginner",
+        color: "$FFF",
+    },
+    2500: {
+        name: "Bronze",
+        color: "$B60",
+    },
+    6000: {
+        name: "Silver",
+        color: "$DDD",
+    },
+    10000: {
+        name: "Gold",
+        color: "$FC0",
+    },
+    25000: {
+        name: "Emerald",
+        color: "$0D0",
+    },
+    50000: {
+        name: "Diamond",
+        color: "$0EF",
+    },
+    100000: {
+        name: "Master",
+        color: "$A2F",
+    },
+    250000: {
+        name: "Grandmaster",
+        color: "$C20",
+    },
+    500000: {
+        name: "Minimaster",
+        color: "$F70",
+    },
+};
+
 export default class MMMLeaderboard extends Plugin {
     static depends: string[] = ["game:Trackmania"];
 
@@ -75,12 +114,11 @@ export default class MMMLeaderboard extends Plugin {
                     rank: mmmScore.mmmScore.rank,
                     time: data[1],
                 });
-                
-                scores.push(score);
-            } 
-            
-            scores = scores.sort((a, b) => a.time - b.time);
 
+                scores.push(score);
+            }
+
+            scores = scores.sort((a, b) => a.time - b.time);
 
             this.records = [];
 
@@ -92,7 +130,7 @@ export default class MMMLeaderboard extends Plugin {
                     let player = await tmc.players.getPlayer(mmmScore.score.login || "");
                     name = player.nickname;
                 }
-                
+
                 this.records.push({
                     login: mmmScore.score.login,
                     formattedTime: formatTime(mmmScore.score.time),
@@ -133,14 +171,12 @@ export default class MMMLeaderboard extends Plugin {
                 });
             }
 
-            let ranks = [];
-
             for (let score of scores) {
                 let mmmScore = mmmScores.find((mmmScore) => mmmScore.score.login === score.login);
                 if (!mmmScore) return;
 
                 let prevPoints = score.points ?? 0;
-                
+
                 score.set({
                     points: mmmScore.mmmScore.points,
                     rank: mmmScore.mmmScore.rank,
@@ -151,7 +187,7 @@ export default class MMMLeaderboard extends Plugin {
                     where: {
                         login: score.login,
                     },
-                    include: [Player]
+                    include: [Player],
                 });
 
                 if (playerRank) {
@@ -162,18 +198,12 @@ export default class MMMLeaderboard extends Plugin {
                     playerRank = await MMMRank.create({
                         login: score.login,
                         totalPoints: mmmScore.mmmScore.points,
-                        rank: mmmScore.mmmScore.rank
+                        rank: mmmScore.mmmScore.rank,
                     });
                 }
-
-                ranks.push(playerRank);
             }
 
-            this.leaderboard = ranks;
-            
-            tmc.server.emit("Plugin.MMMLeaderboard.onSync", {
-            leaderboard: clone(this.leaderboard),
-        });
+            this.calculatePlayerRanks();
         } catch (e: any) {
             console.log(e);
         }
@@ -298,11 +328,12 @@ export default class MMMLeaderboard extends Plugin {
         this.calculatePlayerRanks();
     }
 
-    async syncLeaderboard() {
-        const ranks = await MMMRank.findAll({
-            order: [["rank", "ASC"]],
-            include: [Player],
-        });
+    async syncLeaderboard(ranks: MMMRank[] | undefined = undefined) {
+        if (!ranks)
+            ranks = await MMMRank.findAll({
+                order: [["rank", "ASC"]],
+                include: [Player],
+            });
 
         this.leaderboard = ranks;
 
@@ -343,7 +374,7 @@ export default class MMMLeaderboard extends Plugin {
         let points = await MMMPoints.findAll();
 
         let playerScores: { [key: string]: number } = {};
-        
+
         points.forEach((point) => {
             const login = point.login ?? "";
             if (!playerScores[login]) {
@@ -387,28 +418,68 @@ export default class MMMLeaderboard extends Plugin {
         });
         const nick = player.nickname.replaceAll(/\$[iwozs]/gi, "");
         const text = data[2];
-        let msg = `${nick}$z$s$fff » ${text}`;
+
+        let playerRankRange = this.getPlayerRankRange(playerRank);
+
+        let msg = `${nick} $z$s» ${text}`;
+
         if (playerRank?.rank && playerRank?.rank != 0) {
-            msg = `[${playerRank?.rank}] ${msg}`;
+            msg = `${playerRankRange.color}[${playerRank?.rank}]$fff ${msg}`;
         }
+
         tmc.server.send("ChatSendServerMessage", msg);
         tmc.cli(msg);
     }
 
+    getPlayerRankRange(playerRank: MMMRank | null) {
+        // find the rank name where the players total points is more than the highest rank
+        let rankName = "Beginner";
+        let color = "$FFF";
+        for (let rank of Object.keys(rankNames)) {
+            if ((playerRank?.totalPoints ?? 0) >= parseInt(rank)) {
+                rankName = rankNames[parseInt(rank)].name;
+                color = rankNames[parseInt(rank)].color;
+            }
+        }
+
+        return {
+            rankName,
+            color,
+        };
+    }
+
     async calculatePlayerRanks() {
-        const players = await MMMRank.findAll();
+        const players = await MMMRank.findAll({
+            include: [Player],
+        });
 
         const sortedPlayers = players.sort((a, b) => b.totalPoints - a.totalPoints);
 
         for (let i = 0; i < sortedPlayers.length; i++) {
+            let playerRankRange = this.getPlayerRankRange(sortedPlayers[i]);
+
+            let rankName = sortedPlayers[i].rankName;
+
+            if (playerRankRange.rankName !== sortedPlayers[i].rankName) {
+                rankName = playerRankRange.rankName;
+
+                tmc.chat(
+                    // @ts-expect-error
+                    `$fff${sortedPlayers[i].player.nickname ?? (await tmc.players.getPlayer(playerRank.login)).nickname} ¤info¤has got a new rank! $fff${playerRankRange.color}${
+                        playerRankRange.rankName
+                    }`
+                );
+            }
+
             await sortedPlayers[i].update({
                 rank: i + 1,
+                rankName: rankName,
             });
-        };
+        }
 
         tmc.cli("Ranks updated!");
 
-        this.syncLeaderboard();
+        this.syncLeaderboard(sortedPlayers);
     }
 
     calculateLogarithmicPoints(scores: MMMPoints[], minValue: number = 0.2, multiplier: number = 1000): { score: MMMPoints; mmmScore: MMMScore }[] {
@@ -416,18 +487,18 @@ export default class MMMLeaderboard extends Plugin {
         const sortedScores = scores.sort((a, b) => {
             // First compare by time if both have the `time` property
             if (a.time && b.time) {
-              const timeDiff = a.time - b.time;
-              // If the times are different, return the difference
-              if (timeDiff !== 0) {
-                return timeDiff;
-              }
+                const timeDiff = a.time - b.time;
+                // If the times are different, return the difference
+                if (timeDiff !== 0) {
+                    return timeDiff;
+                }
             }
             // If times are the same (or one is missing), sort by updatedAt
             if (a.updatedAt && b.updatedAt) {
-              return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+                return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
             }
             return 0;
-          });
+        });
 
         // Total number of scores
         const total = sortedScores.length;
