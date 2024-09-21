@@ -75,7 +75,7 @@ export default class MenuPlugin extends Plugin {
     async toggleMenu(login: string) {
         if (!this.menuInstances[login]) {
             const menu = new MenuWidget(login, "core/plugins/widgets/menu/menu.twig");
-            menu.pos = {x: 125, y: -45, z: 1};
+            menu.pos = {x: 125, y: -45, z: 2};
             menu.size = {width: 300, height: 400};
             this.menuInstances[login] = menu;
             await menu.display();

@@ -1,4 +1,3 @@
-import { time } from "console";
 import Plugin from "../../../core/plugins";
 import Score from "../../../core/schemas/scores.model";
 import MMMPoints from "../../schemas/mmmpoints.model";
@@ -16,7 +15,6 @@ interface MMMScore {
 export default class MMMLeaderboard extends Plugin {
     static depends: string[] = ["game:Trackmania"];
 
-    currentMapUid: string = "";
     leaderboard: MMMRank[] = [];
     records: any[] = [];
 
@@ -31,8 +29,142 @@ export default class MMMLeaderboard extends Plugin {
         tmc.storage["db"].addModels([MMMRank, MMMPoints]);
         tmc.server.addListener("Trackmania.EndMap_Start", this.onEndMap, this);
         tmc.server.addListener("Trackmania.BeginMap", this.onBeginMap, this);
+        tmc.server.addListener("TMC.PlayerFinish", this.onPlayerFinish, this);
         tmc.chatCmd.addCommand("/leaderboard", this.cmdLeaderboard.bind(this), "Display MMM Leaderboard");
         tmc.chatCmd.addCommand("/points", this.cmdPoints.bind(this), "Display points");
+    }
+
+    async onPlayerFinish(data: any) {
+        const login = data[0];
+        const player = await tmc.players.getPlayer(login);
+        try {
+            let scores = await MMMPoints.findAll({
+                where: {
+                    mapUid: tmc.maps.currentMap?.UId,
+                },
+                include: [Player],
+            });
+
+            let score: any = scores.find((score: MMMPoints) => score.login === login);
+            let prevScore = clone(score);
+
+            let newScore = false;
+
+            if (!score) {
+                newScore = true;
+                score = {
+                    login: login,
+                    time: data[1],
+                };
+            } else {
+                if (score.time <= data[1]) return;
+                score.time = data[1];
+            }
+
+            let mmmScores = this.calculateLogarithmicPoints(newScore ? [...scores, score] : scores);
+
+            if (newScore) {
+                let mmmScore = mmmScores.find((mmmScore) => mmmScore.score.login === login);
+
+                if (!mmmScore) return;
+
+                score = await MMMPoints.create({
+                    login: login,
+                    mapUid: tmc.maps.currentMap?.UId,
+                    points: mmmScore.mmmScore.points,
+                    rank: mmmScore.mmmScore.rank,
+                    time: data[1],
+                });
+                
+                scores.push(score);
+            } 
+            
+            scores = scores.sort((a, b) => a.time - b.time);
+
+
+            this.records = [];
+
+            for (let mmmScore of mmmScores) {
+                // @ts-expect-error
+                let name = mmmScore.score?.player?.nickname;
+
+                if (!name) {
+                    let player = await tmc.players.getPlayer(mmmScore.score.login || "");
+                    name = player.nickname;
+                }
+                
+                this.records.push({
+                    login: mmmScore.score.login,
+                    formattedTime: formatTime(mmmScore.score.time),
+                    points: mmmScore.mmmScore.points,
+                    rank: mmmScore.mmmScore.rank,
+                    nickname: escape(name),
+                });
+            }
+
+            let playerScore = mmmScores.find((score) => score.score.login === login);
+
+            if (!playerScore) return;
+
+            if (playerScore.mmmScore.rank === 1) {
+                tmc.server.emit("Plugin.MMMRecords.onNewRecord", {
+                    record: {
+                        nickname: player.nickname,
+                        time: playerScore.score.time,
+                        points: playerScore.mmmScore.points - (prevScore?.points ?? 0),
+                    },
+                    records: clone(this.records),
+                });
+            } else {
+                tmc.server.emit("Plugin.MMMRecords.onUpdateRecord", {
+                    record: {
+                        nickname: player.nickname,
+                        time: playerScore.score.time,
+                        points: playerScore.mmmScore.points,
+                        rank: playerScore.mmmScore.rank,
+                    },
+                    oldRecord: {
+                        nickname: player.nickname,
+                        time: prevScore?.time,
+                        points: prevScore?.points ?? 0,
+                        rank: prevScore?.rank,
+                    },
+                    records: clone(this.records),
+                });
+            }
+
+            scores.forEach(async (score, index) => {
+                let mmmScore = mmmScores.find((mmmScore) => mmmScore.score.login === score.login);
+                if (!mmmScore) return;
+
+                let prevPoints = score.points ?? 0;
+                
+                score.set({
+                    points: mmmScore.mmmScore.points,
+                    rank: mmmScore.mmmScore.rank,
+                });
+                await score.save();
+
+                let playerRank = await MMMRank.findOne({
+                    where: {
+                        login: score.login,
+                    },
+                });
+
+                if (playerRank) {
+                    await playerRank.update({
+                        totalPoints: newScore ? playerRank.totalPoints + mmmScore.mmmScore.points : playerRank.totalPoints + mmmScore.mmmScore.points - (prevPoints ?? 0),
+                    });
+                } else {
+                    playerRank = await MMMRank.create({
+                        login: score.login,
+                        totalPoints: mmmScore.mmmScore.points,
+                    });
+                }
+            });
+        } catch (e: any) {
+            console.log(e);
+        }
     }
 
     async onUnload() {
@@ -43,6 +175,7 @@ export default class MMMLeaderboard extends Plugin {
         }
         tmc.server.removeListener("Trackmania.EndMap_Start", this.onEndMap.bind(this));
         tmc.server.removeListener("Trackmania.BeginMap", this.onBeginMap.bind(this));
+        tmc.server.removeListener("TMC.PlayerFinish", this.onPlayerFinish.bind(this));
         tmc.server.removeListener("Trackmania.PlayerChat", this.onPlayerChat);
         tmc.chatCmd.removeCommand("/leaderboard");
         tmc.chatCmd.removeCommand("/points");
@@ -64,35 +197,9 @@ export default class MMMLeaderboard extends Plugin {
             });
         }
         if (!tmc.maps.currentMap?.UId) return;
-        this.currentMapUid = tmc.maps.currentMap.UId;
 
-        await this.syncLeaderboard();
-        await this.syncRecords(this.currentMapUid);
-        // this.test();
-    }
-
-    test() {
-        tmc.server.emit("TMC.PlayerFinish", [
-            "44f32K-wS_a7KYaNGmLeOw",
-            26419,
-            {
-                time: 5292120,
-                login: "44f32K-wS_a7KYaNGmLeOw",
-                accountid: "e387f7d8-afb0-4bf6-bb29-868d1a62de3b",
-                racetime: 26419,
-                laptime: 26419,
-                checkpointinrace: 1,
-                checkpointinlap: 1,
-                isendrace: true,
-                isendlap: true,
-                isinfinitelaps: false,
-                isindependentlaps: false,
-                curracecheckpoints: [],
-                curlapcheckpoints: [],
-                blockid: "#50331650",
-                speed: 8.79688,
-            },
-        ]);
+        await this.calculateFullPointsAndRanks();
+        await this.syncRecords();
     }
 
     async cmdLeaderboard(login: string, args: string[]) {
@@ -133,7 +240,7 @@ export default class MMMLeaderboard extends Plugin {
     async cmdPoints(login: string, args: string[]) {
         const points = await MMMPoints.findAll({
             where: {
-                mapUid: this.currentMapUid,
+                mapUid: tmc.maps.currentMap?.UId,
             },
             order: [["rank", "ASC"]],
             include: [
@@ -172,73 +279,10 @@ export default class MMMLeaderboard extends Plugin {
     }
 
     async onBeginMap(data: any) {
-        const map = data[0];
-        this.currentMapUid = map.UId;
+        this.syncRecords();
     }
 
     async onEndMap(data: any) {
-        const mapUid = data.map?.uid;
-
-        if (!mapUid) return;
-
-        const mapScores = await Score.findAll({
-            where: {
-                mapUuid: mapUid,
-            },
-            order: [["time", "DESC"]],
-        });
-
-        const fullScores = this.calculateLogarithmicPoints(mapScores);
-
-        for (const fullScore of fullScores) {
-            const score = fullScore.score;
-            const mmmScore = fullScore.mmmScore;
-
-            if (!score.time) return;
-
-            const playerPoints = await MMMPoints.findOne({
-                where: {
-                    login: score.login,
-                    mapUid: mapUid,
-                },
-            });
-
-            const playerRank = await MMMRank.findOne({
-                where: {
-                    login: score.login,
-                },
-            });
-
-            if (!playerRank) {
-                await MMMRank.create({
-                    login: score.login,
-                    totalPoints: mmmScore.points,
-                });
-            } else {
-                let points = playerRank.totalPoints;
-                if (playerPoints?.points) points -= playerPoints.points;
-                playerRank.update({
-                    totalPoints: points + mmmScore.points,
-                });
-            }
-
-            if (!playerPoints) {
-                await MMMPoints.create({
-                    login: score.login,
-                    mapUid: mapUid,
-                    points: mmmScore.points,
-                    rank: mmmScore.rank,
-                    time: score.time,
-                });
-            } else {
-                playerPoints.update({
-                    points: mmmScore.points,
-                    rank: mmmScore.rank,
-                    time: score.time,
-                });
-            }
-        }
-
         this.calculatePlayerRanks();
     }
 
@@ -255,31 +299,68 @@ export default class MMMLeaderboard extends Plugin {
         });
     }
 
-    async syncRecords(mapUid: string) {
-        const scores = await Score.findAll({
+    async syncRecords() {
+        let mapUid = tmc.maps.currentMap?.UId;
+
+        const records = await MMMPoints.findAll({
             where: {
-                mapUuid: mapUid
+                mapUid: mapUid,
             },
-            order: [
-                // Will escape title and validate DESC against a list of valid direction parameters
-                ['time', 'ASC'],
-                ['updatedAt', 'ASC'],
-            ],
+            order: [["points", "DESC"]],
             include: [Player],
         });
 
-        this.records = [];
-        let rank = 1;
-        for (const score of scores) {
-            score.rank = rank;
-            this.records.push(score);
-            rank += 1;
+        this.records = records.map((record) => {
+            return {
+                login: record.login,
+                formattedTime: formatTime(record.time),
+                points: record.points,
+                rank: record.rank,
+                // @ts-expect-error
+                nickname: escape(record.player.nickname),
+            };
+        });
+
+        tmc.server.emit("Plugin.MMMRecords.onSync", {
+            mapUid: mapUid,
+            records: clone(this.records),
+        });
+    }
+
+    async calculateFullPointsAndRanks() {
+        let points = await MMMPoints.findAll();
+
+        let playerScores: { [key: string]: number } = {};
+        
+        points.forEach((point) => {
+            const login = point.login ?? "";
+            if (!playerScores[login]) {
+                playerScores[login] = 0;
+            }
+            playerScores[login] += point.points;
+        });
+
+        for (const login of Object.keys(playerScores)) {
+            let playerRank = await MMMRank.findOne({
+                where: {
+                    login: login,
+                },
+            });
+
+            if (!playerRank) {
+                playerRank = await MMMRank.create({
+                    login: login,
+                    totalPoints: playerScores[login],
+                });
+            } else {
+                playerRank.set({
+                    totalPoints: playerScores[login],
+                });
+                await playerRank.save();
+            }
         }
 
-        tmc.server.emit("Plugin.Records.onSync", {
-            mapUid: mapUid,
-            records: clone(this.records)
-        });
+        this.calculatePlayerRanks();
     }
 
     async onPlayerChat(data: any) {
@@ -307,18 +388,34 @@ export default class MMMLeaderboard extends Plugin {
 
         const sortedPlayers = players.sort((a, b) => b.totalPoints - a.totalPoints);
 
-        sortedPlayers.forEach(async (player, index) => {
-            player.update({
-                rank: index + 1,
+        for (let i = 0; i < sortedPlayers.length; i++) {
+            await sortedPlayers[i].update({
+                rank: i + 1,
             });
-        });
+        };
 
         tmc.cli("Ranks updated!");
+
+        this.syncLeaderboard();
     }
 
-    calculateLogarithmicPoints(scores: Score[], minValue: number = 0.2, multiplier: number = 1000): { score: Score; mmmScore: MMMScore }[] {
-        // Sort scores based on their score (lowest score is the best)
-        const sortedScores = scores.sort((a, b) => (a.time && b.time ? a.time - b.time : 0));
+    calculateLogarithmicPoints(scores: MMMPoints[], minValue: number = 0.2, multiplier: number = 1000): { score: MMMPoints; mmmScore: MMMScore }[] {
+        // Sort scores based on their score (lowest score is the best) if same time, then updated time
+        const sortedScores = scores.sort((a, b) => {
+            // First compare by time if both have the `time` property
+            if (a.time && b.time) {
+              const timeDiff = a.time - b.time;
+              // If the times are different, return the difference
+              if (timeDiff !== 0) {
+                return timeDiff;
+              }
+            }
+            // If times are the same (or one is missing), sort by updatedAt
+            if (a.updatedAt && b.updatedAt) {
+              return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+            }
+            return 0;
+          });
 
         // Total number of scores
         const total = sortedScores.length;

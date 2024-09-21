@@ -4,18 +4,18 @@ import Widget from "../../../../../core/ui/widget";
 import { escape, formatTime } from "../../../../../core/utils";
 import MMMPoints from "../../../../schemas/mmmpoints.model";
 
-export default class RecordsWidget extends Plugin {
-    static depends: string[] = ["records"];
+export default class MMMRecordsWidget extends Plugin {
+    static depends: string[] = ["mmmleaderboard"];
     widgets: { [key: string]: Widget } = {};
     records: any[] = [];
 
     async onLoad() {
         tmc.server.addListener("TMC.PlayerConnect", this.onPlayerConnect, this);
         tmc.server.addListener("TMC.PlayerDisconnect", this.onPlayerDisconnect, this);
-        tmc.server.addListener("Plugin.Records.onSync", this.onSync, this);
-        tmc.server.addListener("Plugin.Records.onRefresh", this.onSync, this);
-        tmc.server.addListener("Plugin.Records.onUpdateRecord", this.onUpdateRecord, this);
-        tmc.server.addListener("Plugin.Records.onNewRecord", this.onNewRecord, this);
+        tmc.server.addListener("Plugin.MMMRecords.onSync", this.onSync, this);
+        tmc.server.addListener("Plugin.MMMRecords.onRefresh", this.onSync, this);
+        tmc.server.addListener("Plugin.MMMRecords.onUpdateRecord", this.onUpdateRecord, this);
+        tmc.server.addListener("Plugin.MMMRecords.onNewRecord", this.onNewRecord, this);
     }
 
     async onPlayerConnect(player: Player) {
@@ -84,13 +84,6 @@ export default class RecordsWidget extends Plugin {
         }
         if (addRecords) {
             outRecords = [...outRecords, ...this.records.slice(5, 10)];
-        }
-
-        for (const rec of outRecords) {
-            rec.formattedTime = formatTime(rec.time);
-            rec.nickname = escape(rec.player.nickname);
-            let points = await MMMPoints.findOne({ where: { login: rec.login, mapUid: tmc.maps.currentMap?.UId } });
-            rec.points = points ? points.points : 0;
         }
 
         widget.setData({ records: outRecords });
