@@ -18,6 +18,8 @@ export default class MMMLeaderboard extends Plugin {
     currentMapUid: string = "";
     points: MMMPoints[] = [];
 
+    calculateRanks: boolean = true;
+
     async onLoad() {
         try {
             await tmc.server.call("ChatEnableManualRouting", true, false);
@@ -31,6 +33,7 @@ export default class MMMLeaderboard extends Plugin {
         tmc.server.addListener("Trackmania.BeginMap", this.onBeginMap, this);
         tmc.chatCmd.addCommand("/ranks", this.cmdRanks.bind(this), "Display ranks");
         tmc.chatCmd.addCommand("/points", this.cmdPoints.bind(this), "Display points");
+        tmc.chatCmd.addCommand("//calcranks", this.cmdCalcRanks.bind(this), "Enable or disable the calculation of ranks");
     }
 
     async onUnload() {
@@ -44,6 +47,7 @@ export default class MMMLeaderboard extends Plugin {
         tmc.server.removeListener("Trackmania.PlayerChat", this.onPlayerChat);
         tmc.chatCmd.removeCommand("/ranks");
         tmc.chatCmd.removeCommand("/points");
+        tmc.chatCmd.removeCommand("//calcranks");
     }
 
     async onStart() {
@@ -141,12 +145,26 @@ export default class MMMLeaderboard extends Plugin {
         await window.display();
     }
 
+    async cmdCalcRanks(login: string, args: string[]) {
+        if (args.length == 0) return tmc.chat(`Calculating ranks is ${this.calculateRanks ? "enabled" : "disabled"}`, login);
+
+        if (args[0].toLowerCase() == "enable" || args[0].toLowerCase() == "true") {
+            this.calculateRanks = true;
+            tmc.chat("Calculating ranks is now enabled", login)
+        } else if (args[0].toLowerCase() == "disable" || args[0].toLowerCase() == "false") {
+            this.calculateRanks = false;
+            tmc.chat("Calculating ranks is now disabled", login)
+        }
+    }
+
     async onBeginMap(data: any) {
         const map = data[0];
         this.currentMapUid = map.UId;
     }
 
     async onEndMap(data: any) {
+        if (!this.calculateRanks || tmc.players.getAll().length == 0) return;
+
         const mapUid = data.map?.uid;
 
         if (!mapUid) return;
