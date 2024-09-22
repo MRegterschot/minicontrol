@@ -23,7 +23,7 @@ const rankNames: { [key: number]: any } = {
     },
     5000: {
         name: "Silver",
-        color: "$DDD",
+        color: "$BBB",
     },
     10000: {
         name: "Gold",
@@ -156,6 +156,7 @@ export default class MMMLeaderboard extends Plugin {
             } else {
                 tmc.server.emit("Plugin.MMMRecords.onUpdateRecord", {
                     record: {
+                        login: player.login,
                         nickname: player.nickname,
                         time: playerScore.score.time,
                         points: playerScore.mmmScore.points,
@@ -175,35 +176,12 @@ export default class MMMLeaderboard extends Plugin {
                 let mmmScore = mmmScores.find((mmmScore) => mmmScore.score.login === score.login);
                 if (!mmmScore) return;
 
-                let prevPoints = score.points ?? 0;
-
                 score.set({
                     points: mmmScore.mmmScore.points,
                     rank: mmmScore.mmmScore.rank,
                 });
                 await score.save();
-
-                let playerRank = await MMMRank.findOne({
-                    where: {
-                        login: score.login,
-                    },
-                    include: [Player],
-                });
-
-                if (playerRank) {
-                    await playerRank.update({
-                        totalPoints: newScore ? playerRank.totalPoints + mmmScore.mmmScore.points : playerRank.totalPoints + mmmScore.mmmScore.points - (prevPoints ?? 0),
-                    });
-                } else {
-                    playerRank = await MMMRank.create({
-                        login: score.login,
-                        totalPoints: mmmScore.mmmScore.points,
-                        rank: mmmScore.mmmScore.rank,
-                    });
-                }
             }
-
-            this.calculatePlayerRanks();
         } catch (e: any) {
             console.log(e);
         }
@@ -325,7 +303,7 @@ export default class MMMLeaderboard extends Plugin {
     }
 
     async onEndMap(data: any) {
-        this.calculatePlayerRanks();
+        this.calculateFullPointsAndRanks();
     }
 
     async syncLeaderboard(ranks: MMMRank[] | undefined = undefined) {
@@ -394,6 +372,7 @@ export default class MMMLeaderboard extends Plugin {
                 playerRank = await MMMRank.create({
                     login: login,
                     totalPoints: playerScores[login],
+                    rankName: "Beginner"
                 });
             } else {
                 playerRank.set({

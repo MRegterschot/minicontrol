@@ -60,12 +60,17 @@ export default class Announces extends Plugin {
             extrainfo = `(¤gray¤$n${formatTime(newRecord.time - oldRecord.time).replace("0:", "")}$m¤rec¤)`;
         }
 
+        let recipient = undefined;
+        if (newRecord.rank > 5) {
+            recipient = newRecord.login;
+        }
+
         if (oldRecord.time == newRecord.time) {
             tmc.chat(`¤white¤${newRecord.nickname}¤rec¤ equalled their ¤white¤${newRecord.rank}. ¤rec¤server record ¤white¤${formatTime(newRecord.time)}¤rec¤!`);
             return;
         }
 
-        tmc.chat(`¤white¤${newRecord.nickname}¤rec¤ improved ¤white¤${newRecord.rank}. ¤rec¤server record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`);
+        tmc.chat(`¤white¤${newRecord.nickname}¤rec¤ improved ¤white¤${newRecord.rank}. ¤rec¤server record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`, recipient);
     }
 
     async onSyncRecord(data: any) {
