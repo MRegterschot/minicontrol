@@ -48,7 +48,7 @@ export default class Announces extends Plugin {
 
     async onNewRecord(data: any) {
         let record = data.record;
-        tmc.chat(`¤white¤${record.nickname}¤rec¤ has set a new $fff1. ¤rec¤ record ¤white¤${formatTime(record.time)}¤rec¤! ¤white¤+${record.points} points¤rec¤!`);
+        tmc.chat(`¤white¤${record.nickname}¤rec¤ has set a new $fff1. ¤rec¤record ¤white¤${formatTime(record.time)}¤rec¤! ¤white¤+${record.points} points¤rec¤!`);
     }
 
     async onUpdateRecord(data: any) {
@@ -66,9 +66,9 @@ export default class Announces extends Plugin {
         }
 
         if (recipient) {
-            tmc.chat(`¤white¤You¤rec¤ set ¤white¤${newRecord.rank}. ¤rec¤ record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`, recipient);
+            tmc.chat(`¤white¤You¤rec¤ set ¤white¤${newRecord.rank}. ¤rec¤record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`, recipient);
         } else {
-            tmc.chat(`¤white¤${newRecord.nickname}¤rec¤ set ¤white¤${newRecord.rank}. ¤rec¤ record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`);
+            tmc.chat(`¤white¤${newRecord.nickname}¤rec¤ set ¤white¤${newRecord.rank}. ¤rec¤record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`);
         }
     }
 
