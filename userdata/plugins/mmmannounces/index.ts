@@ -66,9 +66,9 @@ export default class Announces extends Plugin {
         }
 
         if (recipient) {
-            tmc.chat(`¤white¤You¤rec¤ improved ¤white¤${newRecord.rank}. ¤rec¤ record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`, recipient);
+            tmc.chat(`¤white¤You¤rec¤ set ¤white¤${newRecord.rank}. ¤rec¤ record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`, recipient);
         } else {
-            tmc.chat(`¤white¤${newRecord.nickname}¤rec¤ improved ¤white¤${newRecord.rank}. ¤rec¤ record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`);
+            tmc.chat(`¤white¤${newRecord.nickname}¤rec¤ set ¤white¤${newRecord.rank}. ¤rec¤ record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`);
         }
     }
 
