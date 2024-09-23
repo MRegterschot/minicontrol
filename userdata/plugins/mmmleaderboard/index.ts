@@ -303,6 +303,7 @@ export default class MMMLeaderboard extends Plugin {
     }
 
     async onEndMap(data: any) {
+        tmc.chat("Don't forget to vote for the map!");
         this.calculateFullPointsAndRanks();
     }
 
