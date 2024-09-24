@@ -7,11 +7,11 @@
         {% if data.activeCategory == category %}
             <frame id="button_{{loop.index0}}" pos="0 -{{loop.index0 * 10}}">
                 <label pos="5 -5" z-index="2" size="10 10" textsize="1" halign="center" valign="center" text="{{category}}" textcolor="{{colors.title_bg}}" textfont="GameFontSemiBold"/>
-                <quad pos="5 -5" z-index="1" size="10 10" text=" " halign="center" valign="center" bgcolor="bbb" />
+                <quad pos="5 -5" z-index="1" size="10 10" text=" " halign="center" valign="center" bgcolor="fff" />
             </frame>
         {% else %}
             <frame id="button_{{loop.index0}}" pos="0 -{{loop.index0 * 10}}">
-                <label pos="5 -5" z-index="2" size="10 10" textsize="1" halign="center" valign="center" text="{{category}}" textcolor="bbb" textfont="GameFontSemiBold"/>
+                <label pos="5 -5" z-index="2" size="10 10" textsize="1" halign="center" valign="center" text="{{category}}" textcolor="fff" textfont="GameFontSemiBold"/>
                 <label pos="5 -5" z-index="1" size="10 10" text=" " halign="center" valign="center" focusareacolor1="{{colors.title_bg}}" focusareacolor2="{{colors.title_bg_light}}" action="{{ actions['cat_' ~ category] }}"/>
             </frame>
         {% endif %}
