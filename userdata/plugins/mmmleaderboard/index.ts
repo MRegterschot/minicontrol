@@ -25,7 +25,7 @@ const rankNames: { [key: number]: any } = {
         name: "Silver",
         color: "$BBB",
     },
-    10000: {
+    14000: {
         name: "Gold",
         color: "$FC0",
     },
@@ -51,6 +51,11 @@ const rankNames: { [key: number]: any } = {
     },
 };
 
+const rankChangeMessages: { [key: string]: string[] } = {
+    promoted: ["EZ", "Nice", "Good job", "Well done", "Congratulations", "Amazing", "Incredible", "Unbelievable", "Godlike", "Legendary"],
+    demoted: ["RIP", "Oof", "Unlucky", "Bad luck", "Better luck next time", "Try harder", "You can do it", "You got this", "Keep going", "Don't give up", "LOL"],
+}
+
 export default class MMMLeaderboard extends Plugin {
     static depends: string[] = ["game:Trackmania"];
 
@@ -71,6 +76,41 @@ export default class MMMLeaderboard extends Plugin {
         tmc.server.addListener("TMC.PlayerFinish", this.onPlayerFinish, this);
         tmc.chatCmd.addCommand("/leaderboard", this.cmdLeaderboard.bind(this), "Display MMM Leaderboard");
         tmc.chatCmd.addCommand("/points", this.cmdPoints.bind(this), "Display points");
+    }
+
+    async onUnload() {
+        try {
+            await tmc.server.call("ChatEnableManualRouting", false, false);
+        } catch (e: any) {
+            console.log(e.message);
+        }
+        tmc.server.removeListener("Trackmania.EndMap_Start", this.onEndMap.bind(this));
+        tmc.server.removeListener("Trackmania.BeginMap", this.onBeginMap.bind(this));
+        tmc.server.removeListener("TMC.PlayerFinish", this.onPlayerFinish.bind(this));
+        tmc.server.removeListener("Trackmania.PlayerChat", this.onPlayerChat);
+        tmc.chatCmd.removeCommand("/leaderboard");
+        tmc.chatCmd.removeCommand("/points");
+    }
+    
+    async onStart() {
+        const menu = tmc.storage["menu"];
+        if (menu) {
+            menu.addItem({
+                category: "Players",
+                title: "Show: Leaderboard",
+                action: "/leaderboard",
+            });
+            
+            menu.addItem({
+                category: "Map",
+                title: "Show: Points",
+                action: "/points",
+            });
+        }
+        if (!tmc.maps.currentMap?.UId) return;
+        
+        await this.calculateFullPointsAndRanks();
+        await this.syncRecords();
     }
 
     async onPlayerFinish(data: any) {
@@ -185,41 +225,6 @@ export default class MMMLeaderboard extends Plugin {
         } catch (e: any) {
             console.log(e);
         }
-    }
-
-    async onUnload() {
-        try {
-            await tmc.server.call("ChatEnableManualRouting", false, false);
-        } catch (e: any) {
-            console.log(e.message);
-        }
-        tmc.server.removeListener("Trackmania.EndMap_Start", this.onEndMap.bind(this));
-        tmc.server.removeListener("Trackmania.BeginMap", this.onBeginMap.bind(this));
-        tmc.server.removeListener("TMC.PlayerFinish", this.onPlayerFinish.bind(this));
-        tmc.server.removeListener("Trackmania.PlayerChat", this.onPlayerChat);
-        tmc.chatCmd.removeCommand("/leaderboard");
-        tmc.chatCmd.removeCommand("/points");
-    }
-
-    async onStart() {
-        const menu = tmc.storage["menu"];
-        if (menu) {
-            menu.addItem({
-                category: "Players",
-                title: "Show: Leaderboard",
-                action: "/leaderboard",
-            });
-
-            menu.addItem({
-                category: "Map",
-                title: "Show: Points",
-                action: "/points",
-            });
-        }
-        if (!tmc.maps.currentMap?.UId) return;
-
-        await this.calculateFullPointsAndRanks();
-        await this.syncRecords();
     }
 
     async cmdLeaderboard(login: string, args: string[]) {
@@ -373,7 +378,7 @@ export default class MMMLeaderboard extends Plugin {
                 playerRank = await MMMRank.create({
                     login: login,
                     totalPoints: playerScores[login],
-                    rankName: "Beginner"
+                    rankName: "Beginner",
                 });
             } else {
                 playerRank.set({
@@ -441,13 +446,24 @@ export default class MMMLeaderboard extends Plugin {
             let rankName = sortedPlayers[i].rankName;
 
             if (playerRankRange.rankName !== sortedPlayers[i].rankName) {
+                // find the points of the rank names
+                let oldPoints = Object.keys(rankNames).find((key) => rankNames[key as any].name === sortedPlayers[i].rankName);
+                let newPoints = Object.keys(rankNames).find((key) => rankNames[key as any].name === playerRankRange.rankName);
+
+                let status = "promoted";
+                
+                if (parseInt(oldPoints ?? "0") > parseInt(newPoints ?? "0")) {
+                    status = "demoted";
+                }
+                
+                let rankChangeMessage = rankChangeMessages[status][Math.floor(Math.random() * rankChangeMessages[status].length)];
                 rankName = playerRankRange.rankName;
 
                 tmc.chat(
                     // @ts-expect-error
-                    `$fff${sortedPlayers[i].player.nickname ?? (await tmc.players.getPlayer(playerRank.login)).nickname} ¤info¤has got a new rank! $fff${playerRankRange.color}${
+                    `$fff${sortedPlayers[i].player.nickname ?? (await tmc.players.getPlayer(playerRank.login)).nickname} ¤info¤${status} to $fff${playerRankRange.color}${
                         playerRankRange.rankName
-                    }`
+                    }! $fff${rankChangeMessage}!`
                 );
             }
 
