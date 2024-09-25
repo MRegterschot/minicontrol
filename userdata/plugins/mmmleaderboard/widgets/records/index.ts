@@ -61,6 +61,18 @@ export default class MMMRecordsWidget extends Plugin {
         await tmc.ui.displayManialinks(Object.values(this.widgets));
     }
 
+    async toggleWidget(login: string, value: number) {
+        if (value > 0) {
+            this.widgets[login].pos = { x: 105, y: 30 };
+            this.widgets[login].setData({ ...this.widgets[login].data, open: true });
+        } else {
+            this.widgets[login].pos = { x: 160, y: 30 };
+            this.widgets[login].setData({ ...this.widgets[login].data, open: false });
+        }
+
+        await tmc.ui.displayManialink(this.widgets[login]);
+    }
+
     async updateWidget(login: string) {
         let widget = this.widgets[login];
         if (!widget) {
@@ -70,6 +82,9 @@ export default class MMMRecordsWidget extends Plugin {
             widget.pos = { x: 105, y: 30 };
             widget.size = { width: 55, height: 45 };
             widget.setOpenAction(this.widgetClick.bind(this));
+            widget.actions['open'] = tmc.ui.addAction(this.toggleWidget.bind(this), 1);
+            widget.actions['close'] = tmc.ui.addAction(this.toggleWidget.bind(this), -1);
+            widget.setData({ open: true });
         }
 
         let outRecords = this.records.slice(0, 5);
@@ -86,7 +101,7 @@ export default class MMMRecordsWidget extends Plugin {
             outRecords = [...outRecords, ...this.records.slice(5, 10)];
         }
 
-        widget.setData({ records: outRecords });
+        widget.setData({ ...widget.data, records: outRecords });
         widget.size = { width: 55, height: 4 * outRecords.length + 1 };
 
         this.widgets[login] = widget;
