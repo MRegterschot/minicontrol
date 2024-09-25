@@ -36,6 +36,8 @@ export default class MMMWidget extends Plugin {
         for (const login of Object.keys(this.widgets)) {
             delete this.widgets[login];
         }
+        tmc.server.addListener("TMC.PlayerConnect", this.onPlayerConnect, this);
+        tmc.server.addListener("TMC.PlayerDisconnect", this.onPlayerDisconnect, this);
         tmc.server.removeListener("Plugin.MMMLeaderboard.onSync", this.onSync);
         tmc.server.removeListener("Plugin.MMMLeaderboard.onRefresh", this.onSync);
         tmc.server.removeListener("Plugin.MMMLeaderboard.onUpdateLeaderboard", this.onUpdateLeaderboard);
