@@ -1,7 +1,7 @@
 {% extends "core/templates/widget.twig" %}
 
 {% block content %}
-    {% if data.open == true %}
+    {% if data.open %}
         <label pos="-4 0" z-index="0" text=">" halign="center" size="8 8" textcolor="fff" valign="center" action="{{actions.close}}" />
         {% for item in data.records %}
             <frame pos="0 -{{ loop.index0 * 4 }}" z-index="1">

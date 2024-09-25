@@ -1,6 +1,8 @@
 {% extends "core/templates/widget.twig" %}
 
 {% block content %}
+{% if data.open %}
+    <label pos="49 0" z-index="0" text="<" halign="center" size="8 8" textcolor="fff" valign="center" action="{{actions.close}}" />
 	{% for item in data.leaderboard %}
 		<frame pos="0 -{{ loop.index0 * 4 }}" z-index="1">
             <label pos="2.5 -2" z-index="2" size="5 3.5" text="$n$o{{ item.rank }}" textcolor="fff" halign="center" textsize="1" valign="center2"/>
@@ -31,4 +33,7 @@
             {% endif %}
         </frame>
 	{% endfor %}
+{% else %}
+    <label pos="49 0" z-index="0" text=">" halign="center" size="8 8" textcolor="fff" valign="center" action="{{actions.open}}" />
+{% endif %}
 {% endblock %}

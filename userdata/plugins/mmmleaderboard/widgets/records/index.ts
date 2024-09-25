@@ -37,6 +37,12 @@ export default class MMMRecordsWidget extends Plugin {
         for (const login of Object.keys(this.widgets)) {
             delete this.widgets[login];
         }
+        tmc.server.removeListener("TMC.PlayerConnect", this.onPlayerConnect);
+        tmc.server.removeListener("TMC.PlayerDisconnect", this.onPlayerDisconnect);
+        tmc.server.removeListener("Plugin.MMMRecords.onSync", this.onSync);
+        tmc.server.removeListener("Plugin.MMMRecords.onRefresh", this.onSync);
+        tmc.server.removeListener("Plugin.MMMRecords.onUpdateRecord", this.onUpdateRecord);
+        tmc.server.removeListener("Plugin.MMMRecords.onNewRecord", this.onNewRecord);
     }
 
     async onSync(data: any) {

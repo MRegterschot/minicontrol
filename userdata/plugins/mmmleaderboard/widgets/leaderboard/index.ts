@@ -36,8 +36,8 @@ export default class MMMWidget extends Plugin {
         for (const login of Object.keys(this.widgets)) {
             delete this.widgets[login];
         }
-        tmc.server.addListener("TMC.PlayerConnect", this.onPlayerConnect, this);
-        tmc.server.addListener("TMC.PlayerDisconnect", this.onPlayerDisconnect, this);
+        tmc.server.removeListener("TMC.PlayerConnect", this.onPlayerConnect);
+        tmc.server.removeListener("TMC.PlayerDisconnect", this.onPlayerDisconnect);
         tmc.server.removeListener("Plugin.MMMLeaderboard.onSync", this.onSync);
         tmc.server.removeListener("Plugin.MMMLeaderboard.onRefresh", this.onSync);
         tmc.server.removeListener("Plugin.MMMLeaderboard.onUpdateLeaderboard", this.onUpdateLeaderboard);
@@ -66,6 +66,18 @@ export default class MMMWidget extends Plugin {
         await tmc.ui.displayManialinks(Object.values(this.widgets));
     }
 
+    async toggleWidget(login: string, value: number) {
+        if (value > 0) {
+            this.widgets[login].pos = { x: -160, y: 75 };
+            this.widgets[login].setData({ ...this.widgets[login].data, open: true });
+        } else {
+            this.widgets[login].pos = { x: -205, y: 75 };
+            this.widgets[login].setData({ ...this.widgets[login].data, open: false });
+        }
+
+        await tmc.ui.displayManialink(this.widgets[login]);
+    }
+
     async updateWidget(login: string) {
         let widget = this.widgets[login];
         if (!widget) {
@@ -75,6 +87,9 @@ export default class MMMWidget extends Plugin {
             widget.pos = { x: -160, y: 75 };
             widget.size = { width: 45, height: 45 };
             widget.setOpenAction(this.widgetClick.bind(this));
+            widget.actions['open'] = tmc.ui.addAction(this.toggleWidget.bind(this), 1);
+            widget.actions['close'] = tmc.ui.addAction(this.toggleWidget.bind(this), -1);
+            widget.setData({ open: true });
         }
 
         let outLeaderboard = this.leaderboard.slice(0, 5);
@@ -96,7 +111,7 @@ export default class MMMWidget extends Plugin {
             rank.nickname = escape(rank.player?.nickname ?? (await tmc.getPlayer(rank.login)).nickname);
         }
 
-        widget.setData({ leaderboard: outLeaderboard });
+        widget.setData({ ...widget.data, leaderboard: outLeaderboard });
         widget.size = { width: 45, height: 4 * outLeaderboard.length + 1 };
 
         this.widgets[login] = widget;
