@@ -175,7 +175,8 @@ export default class VotesPlugin extends Plugin {
     }
 
     async cmdExtend(login: string, args: string[]) {
-        let minutes = Number.parseInt(args[0]) || 5;     
+        // let minutes = Number.parseInt(args[0]) || 5;   
+        let minutes = 5;  
         if (minutes < 1) minutes = 1;
         if (minutes > 10) minutes = 10;
 
