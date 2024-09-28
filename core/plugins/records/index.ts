@@ -149,114 +149,120 @@ export default class Records extends Plugin {
     }
 
     async onPlayerFinish(data: any) {
-        const login = data[0];
-        try {
-            if (this.records.length == 0) {
-                let ranking = await this.getRankingsForLogin(data);
-                await Score.create({
-                    login: login,
-                    time: ranking.BestTime,
-                    checkpoints: ranking.BestCheckpoints.join(","),
-                    mapUuid: this.currentMapUid,
-                });
-                const newRecord = await Score.findOne(
-                    {
-                        where: {
-                            [Op.and]: {
-                                login: login,
-                                mapUuid: this.currentMapUid
-                            }
-                        },
-                        include: Player
-                    });
-                newRecord.rank = 1;
+        // const login = data[0];
+        // try {
+        //     if (this.records.length == 0) {
+        //         let ranking = await this.getRankingsForLogin(data);
+        //         await Score.create({
+        //             login: login,
+        //             time: ranking.BestTime,
+        //             checkpoints: ranking.BestCheckpoints.join(","),
+        //             mapUuid: this.currentMapUid,
+        //         });
+        //         const newRecord = await Score.findOne(
+        //             {
+        //                 where: {
+        //                     [Op.and]: {
+        //                         login: login,
+        //                         mapUuid: this.currentMapUid
+        //                     }
+        //                 },
+        //                 include: Player
+        //             });
+        //         newRecord.rank = 1;
 
-                this.records.push(newRecord);
-                tmc.server.emit("Plugin.Records.onNewRecord", {
-                    oldRecord: null,
-                    record: clone(newRecord || {}),
-                    records: clone(this.records)
-                });
-                return;
-            }
+        //         this.records.push(newRecord);
+        //         tmc.server.emit("Plugin.Records.onNewRecord", {
+        //             oldRecord: null,
+        //             record: clone(newRecord || {}),
+        //             records: clone(this.records)
+        //         });
+        //         return;
+        //     }
 
-            const lastIndex = this.records.length > this.limit ? this.limit : this.records.length;
-            const lastRecord = this.records[lastIndex - 1];
+        //     const lastIndex = this.records.length > this.limit ? this.limit : this.records.length;
+        //     const lastRecord = this.records[lastIndex - 1];
 
-            let ranking = await this.getRankingsForLogin(data);
+        //     let ranking = await this.getRankingsForLogin(data);
 
-            if (lastIndex >= this.limit && lastRecord && ranking.BestTime >= lastRecord.time) return;
-            const time = ranking.BestTime;
-            const record = this.records.find(r => r.login === login);
-            let oldRecord = clone(record);
-            if (record) {
-                if (ranking.BestTime >= record.time) return;
-                if (time < record.time) {
-                    record.update({
-                        time: ranking.BestTime,
-                        checkpoints: ranking.BestCheckpoints.join(",")
-                    });
-                    this.records[this.records.findIndex(r => r.login === login)] = record;
-                }
-            } else {
-                await Score.create({
-                    mapUuid: this.currentMapUid,
-                    login: login,
-                    time: ranking.BestTime,
-                    checkpoints: ranking.BestCheckpoints.join(","),
-                });
-                const newRecord = await Score.findOne(
-                    {
-                        where: {
-                            [Op.and]: {
-                                login: login,
-                                mapUuid: this.currentMapUid
-                            }
-                        },
-                        include: Player
-                    }
-                );
-                this.records.push(newRecord);
-            }
-            // Sort records
-            this.records.sort((a, b) => {
+        //     if (lastIndex >= this.limit && lastRecord && ranking.BestTime >= lastRecord.time) return;
+        //     const time = ranking.BestTime;
+        //     const record = this.records.find(r => r.login === login);
+        //     let oldRecord = clone(record);
+        //     if (record) {
+        //         if (ranking.BestTime >= record.time) return;
+        //         if (time < record.time) {
+        //             record.update({
+        //                 time: ranking.BestTime,
+        //                 checkpoints: ranking.BestCheckpoints.join(",")
+        //             });
+        //             this.records[this.records.findIndex(r => r.login === login)] = record;
+        //         }
+        //     } else {
+        //         await Score.create({
+        //             mapUuid: this.currentMapUid,
+        //             login: login,
+        //             time: ranking.BestTime,
+        //             checkpoints: ranking.BestCheckpoints.join(","),
+        //         });
+        //         const newRecord = await Score.findOne(
+        //             {
+        //                 where: {
+        //                     [Op.and]: {
+        //                         login: login,
+        //                         mapUuid: this.currentMapUid
+        //                     }
+        //                 },
+        //                 include: Player
+        //             }
+        //         );
+        //         this.records.push(newRecord);
+        //     }
+        //     // Sort records
+        //     this.records.sort((a, b) => {
 
-                if (a.time === b.time) {
-                    const str = a.updatedAt.toString();
-                    return str.localeCompare(b.updatedAt.toString());
-                }
-                return a.time - b.time;
-            });
+        //         if (a.time === b.time) {
+        //             const str = a.updatedAt.toString();
+        //             return str.localeCompare(b.updatedAt.toString());
+        //         }
+        //         return a.time - b.time;
+        //     });
 
-            // Update ranks
-            let outRecord = {};
-            for (let i = 0; i < this.records.length; i++) {
-                this.records[i].rank = i + 1;
+        //     // Update ranks
+        //     let outRecord = {};
+        //     for (let i = 0; i < this.records.length; i++) {
+        //         this.records[i].rank = i + 1;
                
-                if (this.records[i].login == login) {
-                    outRecord = this.records[i];
-                }
-                if (i >= this.limit) {
-                    tmc.cli(`Deleting record ${i} because it's out of limit.`);
-                    await Score.destroy({
-                        where: {
-                            [Op.and]: {
-                                login: this.records[i].login,
-                                mapUuid: this.currentMapUid
-                            }
-                        }
-                    });
-                }
-            }
+        //         if (this.records[i].login == login) {
+        //             outRecord = this.records[i];
+        //         }
+        //         if (i >= this.limit) {
+        //             tmc.cli(`Deleting record ${i} because it's out of limit.`);
+        //             await Score.destroy({
+        //                 where: {
+        //                     [Op.and]: {
+        //                         login: this.records[i].login,
+        //                         mapUuid: this.currentMapUid
+        //                     }
+        //                 }
+        //             });
+        //         }
+        //     }
 
-            this.records = this.records.slice(0, this.limit);
-            tmc.server.emit("Plugin.Records.onUpdateRecord", {
-                oldRecord: oldRecord || {},
-                record: clone(outRecord),
-                records: clone(this.records)
-            });
-        } catch (e: any) {
-            console.log(e);
-        }
+        //     this.records = this.records.slice(0, this.limit);
+        //     tmc.server.emit("Plugin.Records.onUpdateRecord", {
+        //         oldRecord: oldRecord || {},
+        //         record: clone(outRecord),
+        //         records: clone(this.records)
+        //     });
+        // } catch (e: any) {
+        //     console.log(e);
+        // }
+
+        Score.create({
+            login: data[0],
+            time: data[1],
+            mapUuid: this.currentMapUid,
+        });
     }
 }
