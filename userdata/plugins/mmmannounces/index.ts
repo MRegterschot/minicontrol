@@ -35,7 +35,7 @@ export default class Announces extends Plugin {
 
     async onPlayerConnect(player: Player) {
         tmc.chat(`${tmc.brand} ¤info¤version ¤white¤${tmc.version}`, player.login);
-        const msg = `¤white¤${player.nickname}¤info¤ from ¤white¤${player.path.replace("World|", "").replaceAll("|", ", ")} ¤info¤joins!`;
+        const msg = `${player.isAdmin ? "¤info¤Admin " : ""}¤white¤${player.nickname}¤info¤ from ¤white¤${player.path.replace("World|", "").replaceAll("|", ", ")} ¤info¤joins!`;
         tmc.chat(msg);
         tmc.cli(msg);
     }
