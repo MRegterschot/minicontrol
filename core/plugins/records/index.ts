@@ -259,10 +259,14 @@ export default class Records extends Plugin {
         //     console.log(e);
         // }
 
-        Score.create({
-            login: data[0],
-            time: data[1],
-            mapUuid: this.currentMapUid,
-        });
+        try {
+            Score.create({
+                login: data[0],
+                time: data[1],
+                mapUuid: this.currentMapUid,
+            });
+        } catch (e: any) {
+            console.log(e);
+        }
     }
 }
