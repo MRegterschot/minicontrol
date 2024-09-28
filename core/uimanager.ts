@@ -47,7 +47,7 @@ export default class UiManager {
             this.setUiProperty("Race_RespawnHelper", "visible", false);
             this.setUiProperty("Race_DisplayMessage", "visible", false);
             this.setUiProperty("Race_BestRaceViewer", "visible", false);
-            this.setUiProperty("Race_DisplayMessage", "visible", false);
+            this.setUiProperty("Race_LapsCounter", "visible", false);
             // this.setUiProperty("Race_Record", "scale", 0.8);
             this.setUiProperty("Race_Countdown", "position", [155, -50]);
             await this.sendUiProperties();
@@ -76,6 +76,7 @@ export default class UiManager {
     }
 
     private async onCallbackArray(data: any) {
+        console.log(data);
         if (data && this.scriptCalls.includes(data.responseid)) {
             this.scriptCalls.splice(this.scriptCalls.indexOf(data.responseid), 1);
             if (data.uimodules) {
