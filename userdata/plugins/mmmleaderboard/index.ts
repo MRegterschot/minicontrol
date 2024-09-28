@@ -57,7 +57,7 @@ const rankChangeMessages: { [key: string]: string[] } = {
 }
 
 export default class MMMLeaderboard extends Plugin {
-    static depends: string[] = ["game:Trackmania"];
+    static depends: string[] = ["game:Trackmania", "database"];
 
     leaderboard: MMMRank[] = [];
     records: any[] = [];
