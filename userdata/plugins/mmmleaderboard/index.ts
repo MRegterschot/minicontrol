@@ -6,6 +6,7 @@ import PointsWindow from "./pointsWindow";
 import LeaderboardWindow from "./leaderboardWindow";
 import { clone, escape, formatTime } from "../../../core/utils";
 import Player from "../../../core/schemas/players.model";
+import { time } from "console";
 
 interface MMMScore {
     points: number;
@@ -121,9 +122,11 @@ export default class MMMLeaderboard extends Plugin {
                 where: {
                     mapUid: tmc.maps.currentMap?.UId,
                 },
+                order: [["rank", "ASC"]],
                 include: [Player],
             });
 
+            let firsRecord = clone(scores[0]);
             let score: any = scores.find((score: MMMPoints) => score.login === login);
             let prevScore = clone(score);
 
@@ -190,6 +193,9 @@ export default class MMMLeaderboard extends Plugin {
                         nickname: player.nickname,
                         time: playerScore.score.time,
                         points: playerScore.mmmScore.points - (prevScore?.points ?? 0),
+                    },
+                    oldRecord: {
+                        time: firsRecord.time,
                     },
                     records: clone(this.records),
                 });
