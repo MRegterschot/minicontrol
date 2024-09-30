@@ -54,7 +54,7 @@ const rankNames: { [key: number]: any } = {
 
 const rankChangeMessages: { [key: string]: string[] } = {
     promoted: ["EZ", "Nice", "Good job", "Well done", "Congratulations", "Amazing", "Incredible", "Unbelievable", "Godlike", "Legendary"],
-    demoted: ["RIP", "Oof", "Unlucky", "Bad luck", "Better luck next time", "Try harder", "You can do it", "You got this", "Keep going", "Don't give up", "LOL"],
+    demoted: ["RIP", "Oof", "Unlucky", "Bad luck", "Better luck next time", "Try harder", "You can do it", "You got this", "Keep going", "Don't give up", "LOL", "Should've seen this coming", "Makes sense", "Where you belong", "You're lucky it's not worse"],
 }
 
 export default class MMMLeaderboard extends Plugin {
