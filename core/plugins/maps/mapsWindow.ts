@@ -5,11 +5,19 @@ import Confirm from '../../ui/confirm';
 import ListWindow from '../../ui/listwindow';
 import { formatTime, escape, clone, removeColors } from '../../utils';
 
+enum Medals {
+    Author = 0,
+    Gold = 1,
+    Silver = 2,
+    Bronze = 3,
+    None = 4
+}
+
 export default class MapsWindow extends ListWindow {
     params: string[] = [];
     template: string = "core/plugins/maps/maplist.twig"
     pageSize = 20;
-    ranks: { [key: string]: { mapUid: string, rank: number }[] } = {};
+    ranks: { [key: string]: { mapUid: string, rank: number, medal: Medals }[] } = {};
 
     constructor(login: string, params: string[]) {
         super(login);
@@ -20,7 +28,7 @@ export default class MapsWindow extends ListWindow {
         let maps: any[] = [];
         let i = 1;
         let serverMaps = clone(tmc.maps.get());
-        await this.getPersonalRank(login, serverMaps.map((map: Map) => map.UId));
+        await this.getPersonalRank(login, serverMaps);
         for (const map of serverMaps) {
             if (!this.params[0] ||
                 (
@@ -36,7 +44,8 @@ export default class MapsWindow extends ListWindow {
                         Name: escape(map.Name),
                         AuthorName: escape(map.AuthorNickname || map.Author || ""),
                         ATime: formatTime(map.AuthorTime || map.GoldTime),
-                        Rank: this.ranks[login].find((rank) => rank.mapUid == map.UId)?.rank || 99999
+                        Rank: this.ranks[login].find((rank) => rank.mapUid == map.UId)?.rank || 99999,
+                        Medal: this.ranks[login].find((rank) => rank.mapUid == map.UId)?.medal ?? Medals.None
                     })
                 );
             }
@@ -61,20 +70,33 @@ export default class MapsWindow extends ListWindow {
         await this.uiPaginate(login, "", []);
     }
 
-    async getPersonalRank(login: string, mapUids: string[]) {
+    async getPersonalRank(login: string, maps: Map[]) {
         const mmmPoints = await MMMPoints.findAll({
             where: {
                 login: login,
                 mapUid: {
-                    [Op.in]: mapUids
+                    [Op.in]: maps.map((map) => map.UId)
                 }
             }
         });
 
         this.ranks[login] = mmmPoints.map((point) => {
+            let medal = Medals.None;
+
+            if (point.time <= (maps.find((map) => map.UId == point?.mapUid)?.AuthorTime ?? 0)) {
+                medal = Medals.Author;
+            } else if (point.time <= (maps.find((map) => map.UId == point?.mapUid)?.GoldTime ?? 0)) {
+                medal = Medals.Gold;
+            } else if (point.time <= (maps.find((map) => map.UId == point?.mapUid)?.SilverTime ?? 0)) {
+                medal = Medals.Silver;
+            } else if (point.time <= (maps.find((map) => map.UId == point?.mapUid)?.BronzeTime ?? 0)) {
+                medal = Medals.Bronze;
+            }
+
             return {
-                mapUid: point.mapUid as string,
-                rank: point.rank as number
+                mapUid: point.mapUid ?? "",
+                rank: point.rank ?? 99999,
+                medal: medal
             };
         });
     }

@@ -9,8 +9,10 @@
             <label pos="0 -5.5" z-index="1" size="45 5" textfont="RobotoCondensed" text="by {{ item['AuthorName'] }}" halign="left" textsize="0.95" valign="center2"/>
             <label pos="0 -8.5" z-index="1" size="45 5" textfont="RobotoCondensed" text="{{ item['Environnement'] }} / {{ item['Vehicle'] }}" halign="left" textsize="0.9" valign="center2"/>
             <label pos="44 -8.5" z-index="1" size="45 5" textfont="RobotoCondensed" text="{{ item['ATime'] }}" halign="right" textsize="1" valign="center2"/>
-            <label pos="44 -5.5" z-index="1" size="45 5" textfont="RobotoCondensed" text="Rank {{ item['Rank'] == 99999 ? '-' : item['Rank'] }}" halign="right" textsize="1" valign="center2"/>
-             
+            <label pos="41 -5.5" z-index="1" size="45 5" textfont="RobotoCondensed" text="Rank {{ item['Rank'] == 99999 ? '-' : item['Rank'] }}" halign="right" textsize="1" valign="center2"/>
+            <quad pos="41.5 -3.9" z-index="1" size="3 3" style="MedalsBig" substyle="{{
+                item['Medal'] == 0 ? 'MedalNadeo' : item['Medal'] == 1 ? 'MedalGold' : item['Medal'] == 2 ? 'MedalSilver' : item['Medal'] == 3 ? 'MedalBronze' : 'MedalSlot'
+            }}" />
         {% set key = "item_Queue_" ~ item.index %}
         {% if (item.index % 2) == 0 %}
             <label text=" " pos="0 0" z-index="0" size="45 10" focusareacolor1="{{colors.window_bg_light}}9" focusareacolor2="{{colors.button_bg_hover}}" valign="top" action="{{ actions[key] }}"/>
@@ -37,6 +39,8 @@
                 action="{{ actions['title_5'] }}" />
             <label text="Rank" pos="88 -4" z-index="1" size="12 4" textsize="1" valign="center2" halign="center" textfont="RobotoCondensed" focusareacolor1="{{colors.button_bg}}" focusareacolor2="{{colors.button_bg_hover}}" textcolor="{{colors.button_text}}"
                 action="{{ actions['title_6'] }}" />
+            <label text="Medal" pos="101 -4" z-index="1" size="12 4" textsize="1" valign="center2" halign="center" textfont="RobotoCondensed" focusareacolor1="{{colors.button_bg}}" focusareacolor2="{{colors.button_bg_hover}}" textcolor="{{colors.button_text}}"
+                action="{{ actions['title_7'] }}" />
         </frame>
     </frame>
     

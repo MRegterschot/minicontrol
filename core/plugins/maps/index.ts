@@ -32,7 +32,8 @@ export default class Maps extends Plugin {
             { key: "ATime", title: "Author Time", width: 20 },
             { key: "Environnement", title: "Environment", width: 15 },
             { key: "Vehicle", title: "Vehicle", width: 15 },
-            { key: "Rank", title: "Rank", width: 5 }            
+            { key: "Rank", title: "Rank", width: 5 },
+            { key: "Medal", title: "Medal", width: 5 }            
         ]);
         window.title = "Maps [" + tmc.maps.getMapCount() + "]";
         await window.display()
