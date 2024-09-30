@@ -309,7 +309,7 @@ export default class MMMLeaderboard extends Plugin {
 
     async onEndMap(data: any) {
         tmc.chat("Don't forget to vote for the map!");
-        this.calculateFullPointsAndRanks();
+        this.calculateFullPointsAndRanks(true);
     }
 
     async syncLeaderboard(ranks: MMMRank[] | undefined = undefined) {
@@ -354,7 +354,7 @@ export default class MMMLeaderboard extends Plugin {
         });
     }
 
-    async calculateFullPointsAndRanks() {
+    async calculateFullPointsAndRanks(announce = false) {
         let points = await MMMPoints.findAll();
 
         let playerScores: { [key: string]: number } = {};
@@ -374,6 +374,8 @@ export default class MMMLeaderboard extends Plugin {
                 },
             });
 
+            let prevPoints = playerRank?.totalPoints ?? 0;
+
             if (!playerRank) {
                 playerRank = await MMMRank.create({
                     login: login,
@@ -385,6 +387,16 @@ export default class MMMLeaderboard extends Plugin {
                     totalPoints: playerScores[login],
                 });
                 await playerRank.save();
+            }
+
+            if (announce) {
+                let pointDiff = playerScores[login] - prevPoints;
+
+                if (pointDiff > 0) {
+                    tmc.chat(`You gained ${pointDiff} points`, login);
+                } else if (pointDiff < 0) {
+                    tmc.chat(`You lost ${pointDiff * -1} points`, login);
+                }
             }
         }
 
