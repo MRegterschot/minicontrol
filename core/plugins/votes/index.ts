@@ -226,6 +226,18 @@ export default class VotesPlugin extends Plugin {
         }
 
         this.currentVote.votes.set(login, vote);
+
+        // if everyone on the server has voted, end the vote
+        let players = tmc.players.getAll();
+        let votedPlayers = Array.from(this.currentVote.votes.keys());
+
+        // check if every player is in votedPlayers
+        let allVoted = players.every((player) => votedPlayers.includes(player.login));
+
+        if (allVoted) {
+            await this.endVote();
+            return;
+        }
     }
 
     async checkVote() {
