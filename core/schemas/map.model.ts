@@ -33,6 +33,9 @@ class Map extends Model {
     @Column(DataType.STRING)
     playerModel?: string | null;
 
+    @AllowNull(true)
+    @Column(DataType.STRING)
+    campaign?: string | null;
 }
 
 export default Map;

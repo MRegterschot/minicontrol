@@ -76,7 +76,6 @@ export default class UiManager {
     }
 
     private async onCallbackArray(data: any) {
-        console.log(data);
         if (data && this.scriptCalls.includes(data.responseid)) {
             this.scriptCalls.splice(this.scriptCalls.indexOf(data.responseid), 1);
             if (data.uimodules) {
