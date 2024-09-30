@@ -1,3 +1,6 @@
+import { Op } from 'sequelize';
+import MMMPoints from '../../../userdata/schemas/mmmpoints.model';
+import type { Map } from '../../mapmanager';
 import Confirm from '../../ui/confirm';
 import ListWindow from '../../ui/listwindow';
 import { formatTime, escape, clone, removeColors } from '../../utils';
@@ -30,6 +33,7 @@ export default class MapsWindow extends ListWindow {
                         Name: escape(map.Name),
                         AuthorName: escape(map.AuthorNickname || map.Author || ""),
                         ATime: formatTime(map.AuthorTime || map.GoldTime),
+                        Rank: await this.getPersonalRank(login, map.UId)
                     })
                 );
             }
@@ -52,5 +56,18 @@ export default class MapsWindow extends ListWindow {
     async applyCommand(login: string, action: string) {
         await tmc.chatCmd.execute(login, action);
         await this.uiPaginate(login, "", []);
+    }
+
+    async getPersonalRank(login: string, mapUid: string) {
+        const mmmPoints = await MMMPoints.findOne({ 
+            where: {
+                [Op.and]: {
+                    login: login,
+                    mapUid: mapUid
+                }
+            }
+        });
+
+        return mmmPoints?.rank ?? 99999;
     }
 }

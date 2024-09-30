@@ -25,6 +25,7 @@ export default class ListWindow extends Window {
     items: any = [];
     template = "core/templates/list.twig";
     pageSize: number = 15;
+    login: string = "";
     private currentPage: number;
     private sortColumn: string = "";
     private sortDirection: number = 1;
@@ -33,6 +34,7 @@ export default class ListWindow extends Window {
 
     constructor(login: string) {
         super(login);
+        this.login = login;
         this.actions['pg_start'] = tmc.ui.addAction(this.uiPaginate.bind(this), "start");
         this.actions['pg_prev'] = tmc.ui.addAction(this.uiPaginate.bind(this), "prev");
         this.actions['pg_next'] = tmc.ui.addAction(this.uiPaginate.bind(this), "next");
@@ -159,7 +161,7 @@ export default class ListWindow extends Window {
     }
 
     async display() {
-        await this.uiPaginate("", "start", []);
+        await this.uiPaginate(this.login, "start", []);
     }
 
     addApplyButtons(): void {
