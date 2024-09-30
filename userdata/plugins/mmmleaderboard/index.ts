@@ -399,9 +399,9 @@ export default class MMMLeaderboard extends Plugin {
                 let pointDiff = playerScores[login] - prevPoints;
 
                 if (pointDiff > 0) {
-                    tmc.chat(`You gained ${pointDiff} points`, login);
+                    tmc.chat(`You gained ${pointDiff} points!`, login);
                 } else if (pointDiff < 0) {
-                    tmc.chat(`You lost ${pointDiff * -1} points`, login);
+                    tmc.chat(`You lost ${pointDiff * -1} points!`, login);
                 }
             }
         }
