@@ -9,6 +9,7 @@ export default class MapsWindow extends ListWindow {
     params: string[] = [];
     template: string = "core/plugins/maps/maplist.twig"
     pageSize = 20;
+    ranks: { [key: string]: { mapUid: string, rank: number }[] } = {};
 
     constructor(login: string, params: string[]) {
         super(login);
@@ -18,7 +19,9 @@ export default class MapsWindow extends ListWindow {
     async uiPaginate(login: string, answer: any, entries: any): Promise<void> {
         let maps: any[] = [];
         let i = 1;
-        for (const map of clone(tmc.maps.get())) {
+        let serverMaps = clone(tmc.maps.get());
+        await this.getPersonalRank(login, serverMaps.map((map: Map) => map.UId));
+        for (const map of serverMaps) {
             if (!this.params[0] ||
                 (
                     removeColors(map.Name).toLocaleLowerCase().indexOf(this.params[0].toLocaleLowerCase()) !== -1 ||
@@ -33,7 +36,7 @@ export default class MapsWindow extends ListWindow {
                         Name: escape(map.Name),
                         AuthorName: escape(map.AuthorNickname || map.Author || ""),
                         ATime: formatTime(map.AuthorTime || map.GoldTime),
-                        Rank: await this.getPersonalRank(login, map.UId)
+                        Rank: this.ranks[login].find((rank) => rank.mapUid == map.UId)?.rank || 99999
                     })
                 );
             }
@@ -58,16 +61,21 @@ export default class MapsWindow extends ListWindow {
         await this.uiPaginate(login, "", []);
     }
 
-    async getPersonalRank(login: string, mapUid: string) {
-        const mmmPoints = await MMMPoints.findOne({ 
+    async getPersonalRank(login: string, mapUids: string[]) {
+        const mmmPoints = await MMMPoints.findAll({
             where: {
-                [Op.and]: {
-                    login: login,
-                    mapUid: mapUid
+                login: login,
+                mapUid: {
+                    [Op.in]: mapUids
                 }
             }
         });
 
-        return mmmPoints?.rank ?? 99999;
+        this.ranks[login] = mmmPoints.map((point) => {
+            return {
+                mapUid: point.mapUid as string,
+                rank: point.rank as number
+            };
+        });
     }
 }
