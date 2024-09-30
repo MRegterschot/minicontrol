@@ -1,6 +1,7 @@
 import Plugin from '../../plugins';
 import Widget from '../../ui/widget';
 import { formatTime, processColorString, escape } from '../..//utils';
+import type { Player } from '../../playermanager';
 
 export class Vote {
     type: string;
@@ -34,7 +35,7 @@ export default class VotesPlugin extends Plugin {
     timeout: number = process.env.VOTE_TIMEOUT ? parseInt(process.env.VOTE_TIMEOUT) : 30;
     ratio: number = process.env.VOTE_RATIO ? parseFloat(process.env.VOTE_RATIO) : 0.55;
     currentVote: Vote | null = null;
-    widget: Widget | null = null;
+    widgets: { [key: string]: Widget } = {};
     readonly origTimeLimit = Number.parseInt(process.env.TALIMIT || "300");
     newLimit = this.origTimeLimit;
     extendCounter = 1;
@@ -45,6 +46,8 @@ export default class VotesPlugin extends Plugin {
         tmc.server.addListener("TMC.Vote.Deny", this.onVoteDeny, this);
         tmc.server.addListener("TMC.Vote.Pass", this.onVotePass, this);
         tmc.server.addListener("Trackmania.BeginMap", this.onBeginRound, this);
+        tmc.server.addListener("TMC.PlayerConnect", this.onPlayerConnect, this);
+        tmc.server.addListener("TMC.PlayerDisconnect", this.onPlayerDisconnect, this);
         if (tmc.game.Name == "TmForever") {
             tmc.server.addListener("Trackmania.EndRace", this.onEndMatch, this);
         } else {
@@ -53,6 +56,11 @@ export default class VotesPlugin extends Plugin {
     }
 
     async onUnload() {
+        for (const login of Object.keys(this.widgets)) {
+            delete this.widgets[login];
+        }
+        tmc.server.addListener("TMC.PlayerConnect", this.onPlayerConnect, this);
+        tmc.server.addListener("TMC.PlayerDisconnect", this.onPlayerDisconnect, this);
         tmc.server.removeOverride("CancelVote");
         tmc.server.removeListener("TMC.Vote.Cancel", this.onVoteCancel);
         tmc.server.removeListener("TMC.Vote.Deny", this.onVoteDeny);
@@ -60,8 +68,6 @@ export default class VotesPlugin extends Plugin {
         tmc.server.removeListener("Trackmania.EndRace", this.onEndMatch);
         tmc.server.removeListener("Trackmania.Podium_Start", this.onEndMatch);
         tmc.server.removeListener("Trackmania.BeginMap", this.onBeginRound);
-        this.widget?.destroy();
-        this.widget = null;
         this.currentVote = null;
         tmc.removeCommand("//vote");
         tmc.removeCommand("//pass");
@@ -115,22 +121,35 @@ export default class VotesPlugin extends Plugin {
                 title: "Extend",
                 action: "/extend"
             });
+        }
+    }
 
+    async onPlayerConnect(player: Player) {
+        const login = player.login;
+        this.updateWidget(login);
+        if (this.widgets[login]) {
+            await tmc.ui.displayManialink(this.widgets[login]);
+        }
+    }
+    
+    async onPlayerDisconnect(player: Player) {
+        const login = player.login;
+        if (this.widgets[login]) {
+            delete this.widgets[login];
         }
     }
 
     async onEndMatch() {
         this.newLimit = this.origTimeLimit;
         this.currentVote = null;
-        this.hideWidget();
+        this.hideWidgets();
         tmc.server.emit("TMC.Vote.Cancel", { vote: this.currentVote });
     }
-
 
     async onBeginRound() {
         this.currentVote = null;
         this.newLimit = this.origTimeLimit;        
-        this.hideWidget();        
+        this.hideWidgets();        
         if (this.extendCounter > 1) {
             tmc.server.send("SetTimeAttackLimit", this.origTimeLimit * 1000);            
         }
@@ -157,7 +176,7 @@ export default class VotesPlugin extends Plugin {
     cancelVote(login: string) {
         tmc.server.emit("TMC.Vote.Cancel", { vote: this.currentVote });
         this.currentVote = null;
-        this.hideWidget();
+        this.hideWidgets();
     }
 
     async cmdVotes(login: string, args: string[]) {
@@ -200,10 +219,9 @@ export default class VotesPlugin extends Plugin {
         this.currentVote = new Vote(login, type, question, Date.now() + this.timeout * 1000, value);
         this.currentVote.vote_ratio = this.ratio;
         await this.vote(login, true);
-        this.widget = new Widget("core/plugins/votes/widget.twig");
-        this.widget.pos = { x: 0, y: 60 };
-        this.widget.actions['yes'] = tmc.ui.addAction(this.vote.bind(this), true);
-        this.widget.actions['no'] = tmc.ui.addAction(this.vote.bind(this), false);
+
+        await this.updateWidgets();
+
         await this.checkVote();
     }
 
@@ -242,7 +260,7 @@ export default class VotesPlugin extends Plugin {
 
     async checkVote() {
         if (!this.currentVote) {
-            this.hideWidget();
+            this.hideWidgets();
             return;
         }
         if (this.currentVote.timeout < Date.now()) {
@@ -250,15 +268,16 @@ export default class VotesPlugin extends Plugin {
             return;
         } else {
             setTimeout(this.checkVote.bind(this), 1000);
-            await this.showWidget();
+            await this.updateWidgets();
         }
     }
 
     async endVote(forcePass: boolean = false) {
         if (!this.currentVote) {
-            this.hideWidget();
+            this.hideWidgets();
             return;
         }
+
         const votes = Array.from(this.currentVote.votes.values());
         const yes = votes.filter((vote) => vote).length;
         const no = votes.filter((vote) => !vote).length;
@@ -279,37 +298,63 @@ export default class VotesPlugin extends Plugin {
         }
 
         this.currentVote = null;
-        this.hideWidget();
+        this.hideWidgets();
     }
 
-
-    async showWidget() {
+    async updateWidgets() {
         if (!this.currentVote) {
-            this.hideWidget();
+            this.hideWidgets();
             return;
         }
-        if (!this.widget) return;
+
         const yes = Array.from(this.currentVote.votes.values()).filter((vote) => vote).length;
         const no = Array.from(this.currentVote.votes.values()).filter((vote) => !vote).length;
         const total = yes + no;
         const percent = yes / total;
 
-        this.widget.setData({
-            yes: yes,
-            no: no,
+        for (const player of tmc.players.getAll()) {
+            this.updateWidget(player.login, yes, no, total, percent);
+        }
+
+        await tmc.ui.displayManialinks(Object.values(this.widgets));
+    }
+
+    updateWidget(login: string, yes: number = 0, no: number = 0, total: number = 0, percent: number = 0) {
+        if (!this.currentVote) {
+            this.hideWidgets();
+            return;
+        }
+
+        let widget = this.widgets[login];
+        
+        if (!widget) {
+            widget = new Widget("core/plugins/votes/widget.twig");
+            widget.pos = { x: 0, y: 60 };
+            widget.actions['yes'] = tmc.ui.addAction(this.vote.bind(this), true);
+            widget.actions['no'] = tmc.ui.addAction(this.vote.bind(this), false);
+            widget.recipient = login;
+        }
+
+        widget.setData({
+            voted: this.currentVote.votes.get(login),
+            yes,
+            no,
             vote: this.currentVote,
-            total: total,
+            total,
             yes_ratio: percent,
             voteText: processColorString(escape(this.currentVote.question)),
             time_percent: (this.currentVote.timeout - Date.now()) / (this.timeout * 1000),
             timer: formatTime(Math.floor(Math.abs(Date.now() - this.currentVote.timeout))).replace(/\.\d\d\d/, "")
         });
-        await this.widget.display();
+
+        this.widgets[login] = widget;
     }
 
-    hideWidget() {
-        this.widget?.destroy();
-        this.widget = null;
+    hideWidgets() {
+        for (const login of Object.keys(this.widgets)) {
+            this.widgets[login].destroy();
+            delete this.widgets[login];
+        }
     }
 
     cmdAdmExtend(_login: string, params: string[]) {
