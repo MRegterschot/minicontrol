@@ -17,7 +17,7 @@
         textfont="GameFontSemiBold" textsize="3" halign="center" />
     <label pos="45 0" z-index="3" size="16 8" text="No [F6]" halign="center"
         valign="center2" textfont="GameFontSemiBold"
-        textsize="2" action="{{ actions['no'] }}" actionkey="2" focusareacolor1="500"
+        textsize="2" action="{{ actions['no'] }}" actionkey="2" focusareacolor1="{{ data.voted ? 'D00' : '600' }}"
         focusareacolor2="a00" />
     <label pos="-45 0" z-index="3" size="16 8" text="Yes [F5]" valign="center2"
         textfont="GameFontSemiBold" halign="center"
