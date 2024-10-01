@@ -62,6 +62,7 @@ export default class MMMLeaderboard extends Plugin {
 
     leaderboard: MMMRank[] = [];
     records: any[] = [];
+    startRecords: MMMPoints[] = [];
 
     async onLoad() {
         try {
@@ -310,11 +311,12 @@ export default class MMMLeaderboard extends Plugin {
     }
 
     async onBeginMap(data: any) {
-        this.syncRecords();
+        await this.syncRecords();
     }
 
     async onEndMap(data: any) {
         tmc.chat("Don't forget to vote for the map!");
+        this.calculatePointDiff();
         this.calculateFullPointsAndRanks(true);
     }
 
@@ -342,6 +344,8 @@ export default class MMMLeaderboard extends Plugin {
             order: [["points", "DESC"]],
             include: [Player],
         });
+
+        this.startRecords = clone(records);
 
         this.records = records.map((record) => {
             return {
@@ -380,8 +384,6 @@ export default class MMMLeaderboard extends Plugin {
                 },
             });
 
-            let prevPoints = playerRank?.totalPoints ?? 0;
-
             if (!playerRank) {
                 playerRank = await MMMRank.create({
                     login: login,
@@ -394,19 +396,23 @@ export default class MMMLeaderboard extends Plugin {
                 });
                 await playerRank.save();
             }
-
-            if (announce) {
-                let pointDiff = playerScores[login] - prevPoints;
-
-                if (pointDiff > 0) {
-                    tmc.chat(`You gained ${pointDiff} points!`, login);
-                } else if (pointDiff < 0) {
-                    tmc.chat(`You lost ${pointDiff * -1} points!`, login);
-                }
-            }
         }
 
         this.calculatePlayerRanks();
+    }
+
+    async calculatePointDiff() {
+        this.records.forEach(async (record) => {
+            let startRecord = this.startRecords.find((startRecord) => startRecord.login === record.login);
+
+            let diff = record.points - (startRecord?.points ?? 0);
+
+            if (diff > 0) {
+                tmc.chat(`You gained ${diff} points!`, record.login);
+            } else if (diff < 0) {
+                tmc.chat(`You lost ${diff * -1} points!`, record.login);
+            }
+        });
     }
 
     async onPlayerChat(data: any) {
