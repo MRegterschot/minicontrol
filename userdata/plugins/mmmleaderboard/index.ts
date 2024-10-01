@@ -1,12 +1,10 @@
 import Plugin from "../../../core/plugins";
-import Score from "../../../core/schemas/scores.model";
 import MMMPoints from "../../schemas/mmmpoints.model";
 import MMMRank from "../../schemas/mmmrank.model";
 import PointsWindow from "./pointsWindow";
 import LeaderboardWindow from "./leaderboardWindow";
 import { clone, escape, formatTime } from "../../../core/utils";
 import Player from "../../../core/schemas/players.model";
-import { time } from "console";
 
 interface MMMScore {
     points: number;
