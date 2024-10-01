@@ -12,6 +12,9 @@ class OnlinePlayers extends Model {
     @Column(DataType.STRING)
     @HasOne(() => Player, { as: "player", sourceKey: "login", foreignKey: "login" })
     login!: string;
+
+    @Column(DataType.STRING)
+    serverLogin: string | undefined;
 }
 
 export default OnlinePlayers;

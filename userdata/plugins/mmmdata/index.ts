@@ -6,6 +6,7 @@ export default class MMMData extends Plugin {
 	static depends: string[] = ["game:Trackmania", "database"];
 
 	currentMapUid: string = "";
+	serverLogin: string = process.env.SERVER_LOGIN || "";
 
 	async onLoad() {
 		tmc.storage["db"].addModels([Score, OnlinePlayers]);
@@ -50,6 +51,7 @@ export default class MMMData extends Plugin {
 			await OnlinePlayers.bulkCreate(players.map((player) => {
 				return {
 					login: player.login,
+					serverLogin: this.serverLogin,
 				};
 			}));
 
