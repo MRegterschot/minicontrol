@@ -76,6 +76,7 @@ export default class MMMLeaderboard extends Plugin {
         tmc.server.addListener("TMC.PlayerFinish", this.onPlayerFinish, this);
         tmc.chatCmd.addCommand("/leaderboard", this.cmdLeaderboard.bind(this), "Display MMM Leaderboard");
         tmc.chatCmd.addCommand("/points", this.cmdPoints.bind(this), "Display points");
+        tmc.chatCmd.addCommand("//deletepoints", this.cmdDeletePoints.bind(this), "Delete points");
     }
 
     async onUnload() {
@@ -306,6 +307,23 @@ export default class MMMLeaderboard extends Plugin {
         ]);
 
         await window.display();
+    }
+
+    async cmdDeletePoints(login: string, args: string[]) {
+        if (args.length < 1) {
+            tmc.chat("Usage: //deletepoints <mapUid>");
+            return;
+        }
+
+        for (let mapUid of args) {
+            await MMMPoints.destroy({
+                where: {
+                    mapUid: mapUid,
+                },
+            });
+        }
+
+        tmc.chat("¤info¤Points deleted!", login);
     }
 
     async onBeginMap(data: any) {
