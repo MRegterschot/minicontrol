@@ -48,7 +48,14 @@ export default class Announces extends Plugin {
 
     async onNewRecord(data: any) {
         let record = data.record;
-        tmc.chat(`¤white¤${record.nickname}¤rec¤ has set a new $fff1. ¤rec¤record ¤white¤${formatTime(record.time)}¤rec¤ (¤gray¤$n${formatTime(record.time - data.oldRecord.time).replace("0:", "")}$m¤rec¤)! ¤white¤+${record.points} points¤rec¤!`);
+
+        let delta = "";
+
+        if (data.oldRecord.time) {
+            delta = ` (¤gray¤$n${formatTime(record.time - data.oldRecord.time).replace("0:", "")}$m¤rec¤)`;
+        }
+
+        tmc.chat(`¤white¤${record.nickname}¤rec¤ has set a new $fff1. ¤rec¤record ¤white¤${formatTime(record.time)}¤rec¤${delta}! ¤white¤+${record.points} points¤rec¤!`);
     }
 
     async onUpdateRecord(data: any) {

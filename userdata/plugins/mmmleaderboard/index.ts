@@ -195,7 +195,7 @@ export default class MMMLeaderboard extends Plugin {
                         points: playerScore.mmmScore.points - (prevScore?.points ?? 0),
                     },
                     oldRecord: {
-                        time: firsRecord.time,
+                        time: firsRecord?.time,
                     },
                     records: clone(this.records),
                 });
