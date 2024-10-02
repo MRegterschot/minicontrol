@@ -367,8 +367,31 @@ export default class MMMLeaderboard extends Plugin {
 
     async onEndMap(data: any) {
         tmc.chat("Don't forget to vote for the map!");
+
+        if (tmc.maps.getMaplist()[tmc.maps.getMapCount() - 1]?.UId == tmc.maps.currentMap?.UId) {
+            await this.shuffleList();
+        }
+
         this.calculatePointDiff();
         this.calculateFullPointsAndRanks(true);
+    }
+
+    async shuffleList() {
+        try {
+            let maps = await tmc.server.call("GetMapList", -1, 0);
+            maps = maps.sort(() => Math.random() - 0.5);
+            let toserver = [];
+            for (const map of maps) {
+                toserver.push(map.FileName);
+            }
+            await tmc.server.call("RemoveMapList", toserver);
+            tmc.server.send("AddMapList", toserver);
+            await tmc.maps.syncMaplist();
+            tmc.chat(`¤info¤Rotation completed, shuffling maplist...`);
+            tmc.cli(`Rotation completed, shuffling maplist...`);
+        } catch (err: any) {
+            tmc.cli(`Error: ${err.message}`);
+        }
     }
 
     async syncLeaderboard(ranks: MMMRank[] | undefined = undefined) {
