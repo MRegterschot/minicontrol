@@ -3,6 +3,9 @@
 {% block content %}
     <label pos="0 -3" z-index="1" size="45 3" text="{{ data.mapname }}" halign="right" valign="center2" textfont="GameFontBlack" textsize="2"/>
     <label pos="0 -7.5" z-index="1" size="45 3" text="{{ data.author }}" halign="right" valign="center2" textfont="GameFontSemiBold" textsize="2"/>
-    <label pos="0 -12" z-index="1" size="45 3" text="{{ data.authortime }}" halign="right" valign="center2" textfont="GameFontSemiBold" textsize="1.5"/>
+    <label pos="-1 -12" z-index="1" size="45 3" text="{{ data.authortime }}" halign="right" valign="center2" textfont="GameFontSemiBold" textsize="1.5"/>
+    {% if data.tmx %}
+        <label pos="0 -16.5" z-index="1" size="{{ data.tmx.AwardCount < 10 ? '39.5' : data.tmx.AwardCount < 100 ? '42' : '44.5' }} 5" focusareacolor1="0000" focusareacolor2="0005" text=" Award the map! $FB0🏆$z {{ data.tmx.AwardCount }} " halign="right" valign="center" textfont="GameFontSemiBold" textsize="2" url="https://trackmania.exchange/maps/{{ data.tmx.TrackID }}" />
+    {% endif %}
     <quad  pos="0 0" z-index="0" size="{{size.width}} {{size.height}}" halign="right" bgcolor="0000" action="{{actions['openWidget']}}"/>    
 {% endblock %}

@@ -39,10 +39,14 @@ export default class MapWidget extends Plugin {
 
     async display(data: any) {
         data = data[0];
+
+        const tmxData = await tmc.maps.getTmxData(data.UId);
+
         this.widget?.setData({
             author: data.AuthorNickname ? data.AuthorNickname : data.Author,
             mapname: escape(data.Name),
             authortime: formatTime(data.AuthorTime),
+            tmx: tmxData,
         });
         this.widget?.display();
     }

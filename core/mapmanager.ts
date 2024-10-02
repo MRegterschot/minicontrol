@@ -146,6 +146,16 @@ class MapManager {
     getMapCount(): number {
         return Object.values(this.maps).length;
     }
+
+    async getTmxData(mapUid: string): Promise<any> {
+        const res = await fetch(`https://trackmania.exchange/api/maps/get_map_info/uid/${mapUid}`);
+        
+        try {
+            return await res.json();
+        } catch (e) {
+            return null;
+        }
+    }
 }
 
 export default MapManager;
