@@ -21,6 +21,11 @@ class Player extends Model {
     @Column(DataType.STRING)
     zone?: string | null;
 
+    @Column(DataType.INTEGER)
+    lastPoints?: number | null;
+
+    @Column(DataType.INTEGER)
+    lastRank?: number | null;
 }
 
 export default Player;
