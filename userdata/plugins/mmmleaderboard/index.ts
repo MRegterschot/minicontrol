@@ -5,6 +5,7 @@ import PointsWindow from "./pointsWindow";
 import LeaderboardWindow from "./leaderboardWindow";
 import { clone, escape, formatTime } from "../../../core/utils";
 import Player from "../../../core/schemas/players.model";
+import RanksWindow from "./ranksWindow";
 
 interface MMMScore {
     points: number;
@@ -51,8 +52,8 @@ const rankNames: { [key: number]: any } = {
 };
 
 const rankChangeMessages: { [key: string]: string[] } = {
-    promoted: ["EZ", "Nice", "Good job", "Well done", "Congratulations", "Amazing", "Incredible", "Unbelievable"],
-    demoted: ["RIP", "Oof", "Unlucky", "Bad luck", "Better luck next time", "Try harder", "You can do it", "You got this", "Keep going", "Don't give up", "LOL", "Should've seen this coming", "Makes sense", "Where you belong", "You're lucky it's not worse"],
+    promoted: ["EZ", "Nice", "Good job", "Well done", "Congratulations", "Amazing", "Incredible", "Unbelievable", "YIPPIE"],
+    demoted: ["RIP", "Oof", "Unlucky", "Bad luck", "Better luck next time", "Try harder", "You can do it", "You got this", "Keep going", "Don't give up", "LOL"],
 }
 
 export default class MMMLeaderboard extends Plugin {
@@ -76,6 +77,7 @@ export default class MMMLeaderboard extends Plugin {
         tmc.server.addListener("TMC.PlayerFinish", this.onPlayerFinish, this);
         tmc.chatCmd.addCommand("/leaderboard", this.cmdLeaderboard.bind(this), "Display MMM Leaderboard");
         tmc.chatCmd.addCommand("/points", this.cmdPoints.bind(this), "Display points");
+        tmc.chatCmd.addCommand("/ranks", this.cmdRanks.bind(this), "Display ranks");
         tmc.chatCmd.addCommand("//deletepoints", this.cmdDeletePoints.bind(this), "Delete points");
     }
 
@@ -91,6 +93,8 @@ export default class MMMLeaderboard extends Plugin {
         tmc.server.removeListener("Trackmania.PlayerChat", this.onPlayerChat);
         tmc.chatCmd.removeCommand("/leaderboard");
         tmc.chatCmd.removeCommand("/points");
+        tmc.chatCmd.removeCommand("/ranks");
+        tmc.chatCmd.removeCommand("//deletepoints");
     }
     
     async onStart() {
@@ -107,10 +111,17 @@ export default class MMMLeaderboard extends Plugin {
                 title: "Show: Points",
                 action: "/points",
             });
+
+            menu.addItem({
+                category: "Server",
+                title: "Show: Ranks",
+                action: "/ranks",
+            });
         }
-        if (!tmc.maps.currentMap?.UId) return;
         
         await this.calculateFullPointsAndRanks();
+
+        if (!tmc.maps.currentMap?.UId) return;
         await this.syncRecords();
     }
 
@@ -324,6 +335,25 @@ export default class MMMLeaderboard extends Plugin {
         }
 
         tmc.chat("¤info¤Points deleted!", login);
+    }
+
+    async cmdRanks(login: string, args: string[]) {
+        const window = new RanksWindow(login, this);
+        window.size = { width: 70, height: 75 };
+        window.title = `Ranks`;
+
+        const rankNamesArray = Object.entries(rankNames).map(([score, details]) => ({
+            score: Number(score),
+            name: details.name,
+        }));
+        
+        window.setItems(rankNamesArray);
+        window.setColumns([
+            { key: "score", title: "Score", width: 20 },
+            { key: "name", title: "Name", width: 40 },
+        ]);
+
+        await window.display();
     }
 
     async onBeginMap(data: any) {
