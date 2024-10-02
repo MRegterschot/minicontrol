@@ -153,6 +153,10 @@ export default class SettingsManager {
         this.save();
     }
 
+    isMasterAdmin(login: string) {
+        return this.masterAdmins.includes(login);
+    }
+
     async delete(key: string) {
         delete this.settings[key];
         this.save();

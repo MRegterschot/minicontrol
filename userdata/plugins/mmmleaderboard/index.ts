@@ -326,6 +326,11 @@ export default class MMMLeaderboard extends Plugin {
             return;
         }
 
+        if (!tmc.settingsMgr.isMasterAdmin(login)) {
+            tmc.chat("You don't have permission to use this command!");
+            return;
+        }
+
         for (let mapUid of args) {
             await MMMPoints.destroy({
                 where: {
