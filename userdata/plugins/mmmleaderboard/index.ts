@@ -373,7 +373,7 @@ export default class MMMLeaderboard extends Plugin {
         }
 
         this.calculatePointDiff();
-        this.calculateFullPointsAndRanks(true);
+        this.calculateFullPointsAndRanks();
     }
 
     async shuffleList() {
@@ -438,7 +438,7 @@ export default class MMMLeaderboard extends Plugin {
         });
     }
 
-    async calculateFullPointsAndRanks(announce = false) {
+    async calculateFullPointsAndRanks() {
         let points = await MMMPoints.findAll();
 
         let playerScores: { [key: string]: number } = {};
