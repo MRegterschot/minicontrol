@@ -6,6 +6,8 @@ import LeaderboardWindow from "./leaderboardWindow";
 import { clone, escape, formatTime } from "../../../core/utils";
 import Player from "../../../core/schemas/players.model";
 import RanksWindow from "./ranksWindow";
+import PointsHistory from "../../schemas/pointshistory.model";
+import RankHistory from "../../schemas/rankhistory.model";
 
 interface MMMScore {
     points: number;
@@ -71,7 +73,7 @@ export default class MMMLeaderboard extends Plugin {
             tmc.cli("ChatPlugin: ¤error¤ " + e.message);
         }
 
-        tmc.storage["db"].addModels([MMMRank, MMMPoints]);
+        tmc.storage["db"].addModels([MMMRank, MMMPoints, PointsHistory, RankHistory]);
         tmc.server.addListener("Trackmania.EndMap_Start", this.onEndMap, this);
         tmc.server.addListener("Trackmania.BeginMap", this.onBeginMap, this);
         tmc.server.addListener("TMC.PlayerFinish", this.onPlayerFinish, this);
@@ -238,6 +240,14 @@ export default class MMMLeaderboard extends Plugin {
                     rank: mmmScore.mmmScore.rank,
                 });
                 await score.save();
+
+                PointsHistory.create({
+                    login: score.login,
+                    mapUid: tmc.maps.currentMap?.UId,
+                    time: score.time,
+                    rank: mmmScore.mmmScore.rank,
+                    points: mmmScore.mmmScore.points,
+                });
             }
         } catch (e: any) {
             console.log(e);
@@ -470,6 +480,13 @@ export default class MMMLeaderboard extends Plugin {
                 });
                 await playerRank.save();
             }
+
+            RankHistory.create({
+                login: login,
+                rank: playerRank.rank,
+                totalPoints: playerScores[login],
+                rankName: playerRank.rankName,
+            });
         }
 
         this.calculatePlayerRanks();
