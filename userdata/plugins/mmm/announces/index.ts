@@ -1,6 +1,6 @@
-import type { Player } from "../../../core/playermanager";
-import Plugin from "../../../core/plugins";
-import { formatTime } from "../../../core/utils";
+import type { Player } from "../../../../core/playermanager";
+import Plugin from "../../../../core/plugins";
+import { formatTime } from "../../../../core/utils";
 
 export default class Announces extends Plugin {
     async onLoad() {
@@ -73,9 +73,9 @@ export default class Announces extends Plugin {
         }
 
         if (recipient) {
-            tmc.chat(`¤white¤You¤rec¤ set ¤white¤${newRecord.rank}. ¤rec¤record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`, recipient);
+            tmc.chat(`¤white¤You¤rec¤ set ¤white¤${newRecord.rank}. ¤rec¤record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points} points¤rec¤!`, recipient);
         } else {
-            tmc.chat(`¤white¤${newRecord.nickname}¤rec¤ set ¤white¤${newRecord.rank}. ¤rec¤record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points ?? 0} points¤rec¤!`);
+            tmc.chat(`¤white¤${newRecord.nickname}¤rec¤ set ¤white¤${newRecord.rank}. ¤rec¤record ¤white¤${formatTime(newRecord.time)}¤rec¤ ${extrainfo}! ¤white¤+${newRecord.points - oldRecord.points} points¤rec¤!`);
         }
     }
 

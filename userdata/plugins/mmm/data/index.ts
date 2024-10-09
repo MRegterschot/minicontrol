@@ -1,9 +1,9 @@
 import Score from "@core/schemas/scores.model";
-import Plugin from "../../../core/plugins";
-import OnlinePlayers from "../../schemas/onlineplayers.model";
+import Plugin from "../../../../core/plugins";
+import OnlinePlayers from "../../../schemas/onlineplayers.model";
 import { Player as PlayerM } from "@core/playermanager";
 import Player from "@core/schemas/players.model";
-import MMMRank from "../../schemas/mmmrank.model";
+import MMMRank from "../../../schemas/mmmrank.model";
 
 export default class MMMData extends Plugin {
     static depends: string[] = ["game:Trackmania", "database"];

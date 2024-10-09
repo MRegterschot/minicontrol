@@ -1,11 +1,11 @@
-import type { Player } from "../../../../../core/playermanager";
-import Plugin from "../../../../../core/plugins";
-import Widget from "../../../../../core/ui/widget";
-import { escape, formatTime } from "../../../../../core/utils";
-import MMMPoints from "../../../../schemas/mmmpoints.model";
+import type { Player } from "../../../../../../core/playermanager";
+import Plugin from "../../../../../../core/plugins";
+import Widget from "../../../../../../core/ui/widget";
+import { escape, formatTime } from "../../../../../../core/utils";
+import MMMPoints from "../../../../../schemas/mmmpoints.model";
 
 export default class MMMRecordsWidget extends Plugin {
-    static depends: string[] = ["mmmleaderboard"];
+    static depends: string[] = ["mmm/leaderboard"];
     widgets: { [key: string]: Widget } = {};
     records: any[] = [];
 
@@ -82,7 +82,7 @@ export default class MMMRecordsWidget extends Plugin {
     async updateWidget(login: string) {
         let widget = this.widgets[login];
         if (!widget) {
-            widget = new Widget("userdata/plugins/mmmleaderboard/widgets/records/widget.twig");
+            widget = new Widget("userdata/plugins/mmm/leaderboard/widgets/records/widget.twig");
             widget.title = "Records";
             widget.recipient = login;
             widget.pos = { x: 105, y: 30 };

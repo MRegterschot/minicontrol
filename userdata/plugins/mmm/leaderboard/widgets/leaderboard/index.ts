@@ -1,10 +1,10 @@
-import type { Player } from "../../../../../core/playermanager";
-import Plugin from "../../../../../core/plugins";
-import Widget from "../../../../../core/ui/widget";
-import { escape } from "../../../../../core/utils";
+import type { Player } from "../../../../../../core/playermanager";
+import Plugin from "../../../../../../core/plugins";
+import Widget from "../../../../../../core/ui/widget";
+import { escape } from "../../../../../../core/utils";
 
 export default class MMMWidget extends Plugin {
-    static depends: string[] = ["mmmleaderboard"];
+    static depends: string[] = ["mmm/leaderboard"];
     widgets: { [key: string]: Widget } = {};
     leaderboard: any[] = [];
 
@@ -81,7 +81,7 @@ export default class MMMWidget extends Plugin {
     async updateWidget(login: string) {
         let widget = this.widgets[login];
         if (!widget) {
-            widget = new Widget("userdata/plugins/mmmleaderboard/widgets/leaderboard/widget.twig");
+            widget = new Widget("userdata/plugins/mmm/leaderboard/widgets/leaderboard/widget.twig");
             widget.title = "Leaderboard";
             widget.recipient = login;
             widget.pos = { x: -160, y: 75 };

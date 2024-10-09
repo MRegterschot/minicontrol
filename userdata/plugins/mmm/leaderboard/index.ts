@@ -1,13 +1,13 @@
-import Plugin from "../../../core/plugins";
-import MMMPoints from "../../schemas/mmmpoints.model";
-import MMMRank from "../../schemas/mmmrank.model";
+import Plugin from "../../../../core/plugins";
+import MMMPoints from "../../../schemas/mmmpoints.model";
+import MMMRank from "../../../schemas/mmmrank.model";
 import PointsWindow from "./pointsWindow";
 import LeaderboardWindow from "./leaderboardWindow";
-import { clone, escape, formatTime } from "../../../core/utils";
-import Player from "../../../core/schemas/players.model";
+import { clone, escape, formatTime } from "../../../../core/utils";
+import Player from "../../../../core/schemas/players.model";
 import RanksWindow from "./ranksWindow";
-import PointsHistory from "../../schemas/pointshistory.model";
-import RankHistory from "../../schemas/rankhistory.model";
+import PointsHistory from "../../../schemas/pointshistory.model";
+import RankHistory from "../../../schemas/rankhistory.model";
 
 interface MMMScore {
     points: number;
@@ -58,7 +58,7 @@ const rankChangeMessages: { [key: string]: string[] } = {
     demoted: ["RIP", "Oof", "Unlucky", "Bad luck", "Better luck next time", "Try harder", "You can do it", "You got this", "Keep going", "Don't give up", "LOL"],
 }
 
-export default class MMMLeaderboard extends Plugin {
+export default class Leaderboard extends Plugin {
     static depends: string[] = ["game:Trackmania", "database"];
 
     leaderboard: MMMRank[] = [];
