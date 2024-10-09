@@ -8,6 +8,7 @@ import Player from "../../../../core/schemas/players.model";
 import RanksWindow from "./ranksWindow";
 import PointsHistory from "../../../schemas/pointshistory.model";
 import RankHistory from "../../../schemas/rankhistory.model";
+import Confirm from "@core/ui/confirm";
 
 interface MMMScore {
     points: number;
@@ -341,15 +342,19 @@ export default class Leaderboard extends Plugin {
             return;
         }
 
-        for (let mapUid of args) {
-            await MMMPoints.destroy({
-                where: {
-                    mapUid: mapUid,
-                },
-            });
-        }
+        const confirm = new Confirm(login, "Are you sure you want to delete all the points?", async (mapUid: string) => {
+            for (let mapUid of args) {
+                await MMMPoints.destroy({
+                    where: {
+                        mapUid: mapUid,
+                    },
+                });
+            }
 
-        tmc.chat("¤info¤Points deleted!", login);
+            tmc.chat("¤info¤Points deleted!", login);
+        }, args);
+        
+        await confirm.display();
     }
 
     async cmdRanks(login: string, args: string[]) {
