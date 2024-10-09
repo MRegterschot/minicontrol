@@ -343,7 +343,7 @@ export default class Leaderboard extends Plugin {
             return;
         }
 
-        const confirm = new Confirm(login, "Are you sure you?", async () => {
+        const confirm = new Confirm(login, "Are you sure?", async () => {
             for (let mapUid of args) {
                 await MMMPoints.destroy({
                     where: {
@@ -364,7 +364,7 @@ export default class Leaderboard extends Plugin {
             return;
         }
 
-        const confirm = new Confirm(login, "Are you sure you?", async () => {
+        const confirm = new Confirm(login, "Are you sure?", async () => {
             await MMMPoints.destroy({
                 where: {
                     mapUid: tmc.maps.currentMap?.UId,
