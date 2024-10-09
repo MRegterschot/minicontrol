@@ -82,6 +82,7 @@ export default class Leaderboard extends Plugin {
         tmc.chatCmd.addCommand("/points", this.cmdPoints.bind(this), "Display points");
         tmc.chatCmd.addCommand("/ranks", this.cmdRanks.bind(this), "Display ranks");
         tmc.chatCmd.addCommand("//deletepoints", this.cmdDeletePoints.bind(this), "Delete points");
+        tmc.chatCmd.addCommand("//fatasswizardcastsafireball", this.cmdRemoveMapAndPoints.bind(this), "Remove map and points");
     }
 
     async onUnload() {
@@ -342,7 +343,7 @@ export default class Leaderboard extends Plugin {
             return;
         }
 
-        const confirm = new Confirm(login, "Are you sure you want to delete all the points?", async (mapUid: string) => {
+        const confirm = new Confirm(login, "Are you sure you?", async () => {
             for (let mapUid of args) {
                 await MMMPoints.destroy({
                     where: {
@@ -352,10 +353,34 @@ export default class Leaderboard extends Plugin {
             }
 
             tmc.chat("¤info¤Points deleted!", login);
-        }, args);
+        }, []);
         
         await confirm.display();
     }
+
+    async cmdRemoveMapAndPoints(login: string, args: string[]) {
+        if (!tmc.settingsMgr.isMasterAdmin(login)) {
+            tmc.chat("You don't have permission to use this command!");
+            return;
+        }
+
+        const confirm = new Confirm(login, "Are you sure you?", async () => {
+            await MMMPoints.destroy({
+                where: {
+                    mapUid: tmc.maps.currentMap?.UId,
+                },
+            });
+
+            tmc.chatCmd.execute(login, "//remove");
+
+            await tmc.server.call("NextMap");
+
+            tmc.chat("¤info¤Map and points removed!", login);
+        }, []);
+
+        await confirm.display();
+    }
+
 
     async cmdRanks(login: string, args: string[]) {
         const window = new RanksWindow(login, this);
