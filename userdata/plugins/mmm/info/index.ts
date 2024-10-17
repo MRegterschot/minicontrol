@@ -54,7 +54,6 @@ export default class Info extends Plugin {
 	}
 
 	async manageIntro(login: string, page: number) {
-        
         if (page >= this.windowFiles.length) return;
         
 		let window = new IntroWindow(login, this.windowFiles.length);
@@ -64,7 +63,6 @@ export default class Info extends Plugin {
         
         window.actions['prev'] = tmc.ui.addAction(this.manageIntro.bind(this, login, page - 1), []);
         window.actions['next'] = tmc.ui.addAction(this.manageIntro.bind(this, login, page + 1), []);
-        
         
         await window.display();
 		if (this.windows[login]) {

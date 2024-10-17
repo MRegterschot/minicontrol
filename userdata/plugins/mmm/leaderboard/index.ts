@@ -44,9 +44,13 @@ const rankNames: { [key: number]: any } = {
         name: "Master",
         color: "$A2F",
     },
-    250000: {
+    200000: {
         name: "Grandmaster",
         color: "$C20",
+    },
+    333333: {
+        name: "Gigamaster",
+        color: "$E8F",
     },
     500000: {
         name: "Minimaster",
