@@ -498,6 +498,8 @@ export default class Leaderboard extends Plugin {
                 },
             });
 
+            let prevScore = playerRank?.totalPoints ?? 0;
+
             if (!playerRank) {
                 playerRank = await MMMRank.create({
                     login: login,
@@ -511,12 +513,14 @@ export default class Leaderboard extends Plugin {
                 await playerRank.save();
             }
 
-            RankHistory.create({
-                login: login,
-                rank: playerRank.rank,
-                totalPoints: playerScores[login],
-                rankName: playerRank.rankName,
-            });
+            if (prevScore != playerScores[login]) {
+                RankHistory.create({
+                    login: login,
+                    rank: playerRank.rank,
+                    totalPoints: playerScores[login],
+                    rankName: playerRank.rankName,
+                });
+            }
         }
 
         this.calculatePlayerRanks();
