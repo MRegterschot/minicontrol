@@ -12,5 +12,13 @@
         <quad pos="0 0" z-index="1" size="{{size.width}} {{size.height}}" bgcolor="{{colors.window_bg}}e" />
         <quad pos="-0.5 6.5" z-index="0" size="{{size.width + 1}} {{size.height + 7}}" bgcolor="000b" />
         <quad />
+
+        {% if data.page > 0 %}
+            <label pos="10 -80" z-index="5" text="< previous" action="{{actions.prev}}" />
+        {% endif %}
+
+        {% if data.totalPages - 1 != data.page %}
+            <label pos="150 -80" z-index="3" text="next >" halign="right" action="{{actions.next}}" />
+        {% endif %}
     </frame>
 {% endblock %}

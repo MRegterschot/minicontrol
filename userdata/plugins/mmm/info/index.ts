@@ -54,15 +54,23 @@ export default class Info extends Plugin {
 	}
 
 	async manageIntro(login: string, page: number) {
+        
+        if (page >= this.windowFiles.length) return;
+        
+		let window = new IntroWindow(login, this.windowFiles.length);
+		window.template = `${this.path}/${this.windowFiles[page]}`;
+        window.setPage(page);
+        window.pos.y = 0;
+        
+        window.actions['prev'] = tmc.ui.addAction(this.manageIntro.bind(this, login, page - 1), []);
+        window.actions['next'] = tmc.ui.addAction(this.manageIntro.bind(this, login, page + 1), []);
+        
+        
+        await window.display();
 		if (this.windows[login]) {
 			await this.windows[login].destroy();
 		}
-
-		if (page >= this.windowFiles.length) return;
-
-		let window = new IntroWindow(login);
-		window.template = `${this.path}/${this.windowFiles[page]}`;
-
-		await window.display();
+        this.windows[login] = window;
 	}
 }
+ 
