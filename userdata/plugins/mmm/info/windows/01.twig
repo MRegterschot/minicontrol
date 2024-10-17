@@ -1,5 +1,11 @@
 {% extends "core/templates/intro.twig" %}
 
 {% block content %} 
-<label pos="49 0" z-index="0" text="<" halign="center" size="8 8" textcolor="fff" valign="center" />
+  <label pos="{{size.width / 2}} -10" z-index="0" text="Welcome to the Mini Madness server!" textsize="4" style="TextTitle3" halign="center" textcolor="fff" valign="center" />
+
+  <label pos="{{size.width / 2}} -25" z-index="0" text="On this server you will find maps made by the community in a wide variety of styles." autonewline="1" textsize="2.5" size="90 10" style="TextCardMedium" halign="center" textcolor="fff" valign="center" />
+
+  <label pos="{{size.width / 2}} -40" z-index="0" text="You can gather points by driving times on these maps. " autonewline="1" textsize="2.5" size="110 10" style="TextCardMedium" halign="center" textcolor="fff" valign="center" />
+
+  <label pos="{{size.width / 2}} -55" z-index="0" text="All the points driven on the different maps will be added together. You can get different ranks based on the amount of points you gather." autonewline="1" textsize="2.5" size="110 10" style="TextCardMedium" halign="center" textcolor="fff" valign="center" />
 {% endblock %}
