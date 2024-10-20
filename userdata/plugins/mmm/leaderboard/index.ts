@@ -472,7 +472,7 @@ export default class Leaderboard extends Plugin {
                 points: record.points,
                 rank: record.rank,
                 // @ts-expect-error
-                nickname: escape(record.player.nickname ?? (await tmc.players.getPlayer(record.login)).nickname),
+                nickname: escape(record.player.nickname ?? (await tmc.players.getPlayer(record.login))?.nickname ?? ""),
             };
         });
 
