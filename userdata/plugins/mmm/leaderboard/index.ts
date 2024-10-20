@@ -465,7 +465,7 @@ export default class Leaderboard extends Plugin {
 
         this.startRecords = clone(records);
 
-        this.records = records.map((record) => {
+        this.records = records.map(async (record) => {
             return {
                 login: record.login,
                 formattedTime: formatTime(record.time),
