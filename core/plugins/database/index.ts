@@ -131,6 +131,7 @@ export default class GenericDb extends Plugin {
                 login: player.login,
                 nickname: player.nickname,
                 path: player.path,
+                introSkipped: false
             });
         } else {
             dbPlayer.update({
