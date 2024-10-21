@@ -130,8 +130,7 @@ export default class GenericDb extends Plugin {
             dbPlayer = await Player.create({
                 login: player.login,
                 nickname: player.nickname,
-                path: player.path,
-                introSkipped: false
+                path: player.path
             });
         } else {
             dbPlayer.update({
