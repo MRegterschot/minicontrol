@@ -276,7 +276,7 @@ export default class Leaderboard extends Plugin {
             rankList.push({
                 rank: rank.rank,
                 // @ts-expect-error
-                nickname: escape(rank.player.nickname),
+                nickname: escape(rank.player?.nickname ?? (await tmc.players.getPlayer(rank.login))?.nickname ?? ""),
                 login: rank.login,
                 points: rank.totalPoints,
             });
@@ -314,7 +314,7 @@ export default class Leaderboard extends Plugin {
         for (const point of points) {
             pointsList.push({
                 // @ts-expect-error
-                nickname: point.player.nickname,
+                nickname: point.player?.nickname ?? (await tmc.players.getPlayer(point.login))?.nickname ?? point.login,
                 login: point.login,
                 points: point.points,
                 rank: point.rank,
@@ -465,16 +465,31 @@ export default class Leaderboard extends Plugin {
 
         this.startRecords = clone(records);
 
-        this.records = records.map(async (record) => {
-            return {
+
+        this.records = [];
+
+        for (const record of records) {
+            // @ts-expect-error
+            let name = record.player?.nickname;
+
+            if (!name) {
+                let player = await tmc.players.getPlayer(record.login || "");
+                
+                if (player) {
+                    name = player.nickname;
+                } else {
+                    name = record.login;
+                }
+            }
+
+            this.records.push({
                 login: record.login,
                 formattedTime: formatTime(record.time),
                 points: record.points,
                 rank: record.rank,
-                // @ts-expect-error
-                nickname: escape(record.player.nickname ?? (await tmc.players.getPlayer(record.login))?.nickname ?? ""),
-            };
-        });
+                nickname: escape(name),
+            });
+        }
 
         tmc.server.emit("Plugin.MMMRecords.onSync", {
             mapUid: mapUid,
@@ -614,7 +629,7 @@ export default class Leaderboard extends Plugin {
 
                 tmc.chat(
                     // @ts-expect-error
-                    `$fff${sortedPlayers[i].player.nickname ?? (await tmc.players.getPlayer(playerRank.login)).nickname} ¤info¤${status} to $fff${playerRankRange.color}${
+                    `$fff${sortedPlayers[i].player?.nickname ?? (await tmc.players.getPlayer(sortedPlayers[i].login) ?? "").nickname} ¤info¤${status} to $fff${playerRankRange.color}${
                         playerRankRange.rankName
                     }! $fff${rankChangeMessage}!`
                 );
