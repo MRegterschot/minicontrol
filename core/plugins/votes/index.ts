@@ -253,7 +253,7 @@ export default class VotesPlugin extends Plugin {
         let allVoted = players.every((player) => votedPlayers.includes(player.login));
 
         if (allVoted) {
-            await this.endVote();
+            // await this.endVote();
             return;
         }
     }
@@ -264,7 +264,7 @@ export default class VotesPlugin extends Plugin {
             return;
         }
         if (this.currentVote.timeout < Date.now()) {
-            await this.endVote(false);
+            // await this.endVote(false);
             return;
         } else {
             setTimeout(this.checkVote.bind(this), 1000);
@@ -319,7 +319,7 @@ export default class VotesPlugin extends Plugin {
         await tmc.ui.displayManialinks(Object.values(this.widgets));
     }
 
-    updateWidget(login: string, yes: number = 0, no: number = 0, total: number = 0, percent: number = 0) {
+    async updateWidget(login: string, yes: number = 0, no: number = 0, total: number = 0, percent: number = 0) {
         if (!this.currentVote) {
             this.hideWidgets();
             return;
@@ -342,7 +342,7 @@ export default class VotesPlugin extends Plugin {
             vote: this.currentVote,
             total,
             yes_ratio: percent,
-            voteText: processColorString(escape(this.currentVote.question)),
+            voteText: `${(await tmc.players.getPlayer(login)).nickname} asks ${processColorString(escape(this.currentVote.question))}`,
             time_percent: (this.currentVote.timeout - Date.now()) / (this.timeout * 1000),
             timer: formatTime(Math.floor(Math.abs(Date.now() - this.currentVote.timeout))).replace(/\.\d\d\d/, "")
         });
