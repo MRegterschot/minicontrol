@@ -27,10 +27,8 @@ class Player extends Model {
     @Column(DataType.INTEGER)
     lastRank?: number | null;
 
-    @NotNull
-    @AllowNull(false)
     @Column(DataType.BOOLEAN)
-    introSkipped!: boolean;
+    introSkipped?: boolean | null;
 }
 
 export default Player;
