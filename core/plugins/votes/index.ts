@@ -253,7 +253,7 @@ export default class VotesPlugin extends Plugin {
         let allVoted = players.every((player) => votedPlayers.includes(player.login));
 
         if (allVoted) {
-            // await this.endVote();
+            await this.endVote();
             return;
         }
     }
@@ -264,7 +264,7 @@ export default class VotesPlugin extends Plugin {
             return;
         }
         if (this.currentVote.timeout < Date.now()) {
-            // await this.endVote(false);
+            await this.endVote(false);
             return;
         } else {
             setTimeout(this.checkVote.bind(this), 1000);
