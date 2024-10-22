@@ -406,6 +406,11 @@ export default class Leaderboard extends Plugin {
     }
 
     async onBeginMap(data: any) {
+        tmc.server.emit("Plugin.Log", "maps", {
+            timestamp: new Date().toLocaleTimeString(),
+            map: tmc.maps.currentMap ?? data[0]
+        });
+
         await this.syncRecords();
     }
 
@@ -583,7 +588,7 @@ export default class Leaderboard extends Plugin {
         tmc.server.send("ChatSendServerMessage", msg);
         tmc.cli(msg);
 
-        tmc.server.emit("Plugin.Log.message", {
+        tmc.server.emit("Plugin.Log", "messages", {
             timestamp: new Date().toLocaleTimeString(),
             login: player.login,
             nickname: player.nickname,
