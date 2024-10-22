@@ -582,6 +582,13 @@ export default class Leaderboard extends Plugin {
 
         tmc.server.send("ChatSendServerMessage", msg);
         tmc.cli(msg);
+
+        tmc.server.emit("Plugin.Log.message", {
+            timestamp: new Date().toLocaleTimeString(),
+            login: player.login,
+            nickname: player.nickname,
+            message: text,
+        });
     }
 
     getPlayerRankRange(playerRank: MMMRank | null) {
