@@ -20,5 +20,9 @@
         {% if data.totalPages - 1 != data.page %}
             <label pos="150 -80" z-index="3" text="next >" halign="right" action="{{actions.next}}" />
         {% endif %}
+
+        {% if data.page == data.totalPages - 1 %}
+            <label pos="150 -80" z-index="3" text="close" halign="right" action="{{actions.close}}" />
+        {% endif %}
     </frame>
 {% endblock %}

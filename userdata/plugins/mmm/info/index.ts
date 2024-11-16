@@ -63,6 +63,7 @@ export default class Info extends Plugin {
         
         window.actions['prev'] = tmc.ui.addAction(this.manageIntro.bind(this, login, page - 1), []);
         window.actions['next'] = tmc.ui.addAction(this.manageIntro.bind(this, login, page + 1), []);
+        window.actions['close'] = tmc.ui.addAction(this.close.bind(this, login), []);
         
         await window.display();
 		if (this.windows[login]) {
@@ -70,5 +71,12 @@ export default class Info extends Plugin {
 		}
         this.windows[login] = window;
 	}
+
+    async close(login: string) {
+        if (this.windows[login]) {
+            await this.windows[login].destroy();
+            delete this.windows[login];
+        }
+    }
 }
  
