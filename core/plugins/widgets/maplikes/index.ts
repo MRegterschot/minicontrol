@@ -69,7 +69,7 @@ export default class MapLikesWidget extends Plugin {
         }
 
         let positive = 0;
-        let total = 0.0001;
+        let total = 0;
 
         for (const like of this.mapLikes) {
             if (like.vote > 0) {
@@ -77,8 +77,12 @@ export default class MapLikesWidget extends Plugin {
             }
             total++;
         }
-        let percentage = ((positive / total * 100).toFixed(0) || 0) + "%";
-        if (total < 1) percentage = "No Votes";
+
+        let percentage = "No Votes";
+        
+        if (total > 0) {
+            percentage = ((positive / total * 100).toFixed(0) || 0) + "%";
+        }
 
         widget.setData({
             percentage: percentage,

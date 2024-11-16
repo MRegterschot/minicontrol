@@ -1,23 +1,24 @@
-import { Op } from 'sequelize';
-import MMMPoints from '../../../userdata/schemas/mmmpoints.model';
-import type { Map } from '../../mapmanager';
-import Confirm from '../../ui/confirm';
-import ListWindow from '../../ui/listwindow';
-import { formatTime, escape, clone, removeColors } from '../../utils';
+import { Op } from "sequelize";
+import MMMPoints from "../../../userdata/schemas/mmmpoints.model";
+import type { Map } from "../../mapmanager";
+import Confirm from "../../ui/confirm";
+import ListWindow from "../../ui/listwindow";
+import { formatTime, escape, clone, removeColors } from "../../utils";
+import MapLikes from "@core/schemas/maplikes.model";
 
 enum Medals {
     Author = 0,
     Gold = 1,
     Silver = 2,
     Bronze = 3,
-    None = 4
+    None = 4,
 }
 
 export default class MapsWindow extends ListWindow {
     params: string[] = [];
-    template: string = "core/plugins/maps/maplist.twig"
+    template: string = "core/plugins/maps/maplist.twig";
     pageSize = 20;
-    ranks: { [key: string]: { mapUid: string, rank: number, medal: Medals }[] } = {};
+    ranks: { [key: string]: { mapUid: string; rank: number; medal: Medals }[] } = {};
 
     constructor(login: string, params: string[]) {
         super(login);
@@ -30,22 +31,22 @@ export default class MapsWindow extends ListWindow {
         let serverMaps = clone(tmc.maps.get());
         await this.getPersonalRank(login, serverMaps);
         for (const map of serverMaps) {
-            if (!this.params[0] ||
-                (
-                    removeColors(map.Name).toLocaleLowerCase().indexOf(this.params[0].toLocaleLowerCase()) !== -1 ||
-                    removeColors(map.AuthorName).toLocaleLowerCase().indexOf(this.params[0].toLocaleLowerCase()) !== -1 ||
-                    removeColors(map.Environnement).toLocaleLowerCase().indexOf(this.params[0].toLocaleLowerCase()) !== -1 ||
-                    removeColors(map.Vehicle).toLocaleLowerCase().indexOf(this.params[0].toLocaleLowerCase()) !== -1
-                )
+            if (
+                !this.params[0] ||
+                removeColors(map.Name).toLocaleLowerCase().indexOf(this.params[0].toLocaleLowerCase()) !== -1 ||
+                removeColors(map.AuthorName).toLocaleLowerCase().indexOf(this.params[0].toLocaleLowerCase()) !== -1
             ) {
+                let mapLikes = await this.getMapLikes(map.UId);
                 maps.push(
                     Object.assign(map, {
                         Index: i++,
                         Name: escape(map.Name),
                         AuthorName: escape(map.AuthorNickname || map.Author || ""),
                         ATime: formatTime(map.AuthorTime || map.GoldTime),
+                        MapLikes: mapLikes.percentage,
+                        MapLikesTotal: mapLikes.total,
                         Rank: this.ranks[login].find((rank) => rank.mapUid == map.UId)?.rank || 99999,
-                        Medal: this.ranks[login].find((rank) => rank.mapUid == map.UId)?.medal ?? Medals.None
+                        Medal: this.ranks[login].find((rank) => rank.mapUid == map.UId)?.medal ?? Medals.None,
                     })
                 );
             }
@@ -75,9 +76,9 @@ export default class MapsWindow extends ListWindow {
             where: {
                 login: login,
                 mapUid: {
-                    [Op.in]: maps.map((map) => map.UId)
-                }
-            }
+                    [Op.in]: maps.map((map) => map.UId),
+                },
+            },
         });
 
         this.ranks[login] = mmmPoints.map((point) => {
@@ -96,8 +97,38 @@ export default class MapsWindow extends ListWindow {
             return {
                 mapUid: point.mapUid ?? "",
                 rank: point.rank ?? 99999,
-                medal: medal
+                medal: medal,
             };
         });
+    }
+
+    async getMapLikes(mapUid: string) {
+        const likes = await MapLikes.findAll({
+            where: {
+                mapUuid: mapUid,
+            },
+        });
+
+        let positive = 0;
+        let total = 0;
+
+        for (const like of likes) {
+            if (!like.vote) continue;
+            if (like.vote > 0) {
+                positive++;
+            }
+            total++;
+        }
+
+        let percentage = "No Votes";
+        
+        if (total > 0) {
+            percentage = ((positive / total * 100).toFixed(0) || 0) + "%";
+        }
+
+        return {
+            percentage,
+            total,
+        };
     }
 }

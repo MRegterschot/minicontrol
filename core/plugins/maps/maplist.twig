@@ -7,7 +7,7 @@
         <frame pos="{{ posx }} -{{ posy }}" z-index="1">
             <label pos="0 -2.5" z-index="1" size="45 5" textfont="RobotoCondensed" text="{{ item['Index'] }}. {{ item['Name'] }}" halign="left" textsize="1.25" valign="center2"/>
             <label pos="0 -5.5" z-index="1" size="45 5" textfont="RobotoCondensed" text="by {{ item['AuthorName'] }}" halign="left" textsize="0.95" valign="center2"/>
-            <label pos="0 -8.5" z-index="1" size="45 5" textfont="RobotoCondensed" text="{{ item['Environnement'] }} / {{ item['Vehicle'] }}" halign="left" textsize="0.9" valign="center2"/>
+            <label pos="0 -8.5" z-index="1" size="45 5" textfont="RobotoCondensed" text="{{ item['MapLikes'] }} - {{ item['MapLikesTotal'] }}" halign="left" textsize="0.9" valign="center2"/>
             <label pos="44 -8.5" z-index="1" size="45 5" textfont="RobotoCondensed" text="{{ item['ATime'] }}" halign="right" textsize="1" valign="center2"/>
             <label pos="41 -5.5" z-index="1" size="45 5" textfont="RobotoCondensed" text="Rank {{ item['Rank'] == 99999 ? '-' : item['Rank'] }}" halign="right" textsize="1" valign="center2"/>
             <quad pos="41.5 -3.9" z-index="1" size="3 3" style="MedalsBig" substyle="{{
@@ -33,14 +33,12 @@
                 action="{{ actions['title_2'] }}" />
             <label text="AT" pos="49 -4" z-index="1" size="12 4" textsize="1" valign="center2" halign="center" textfont="RobotoCondensed" focusareacolor1="{{colors.button_bg}}" focusareacolor2="{{colors.button_bg_hover}}" textcolor="{{colors.button_text}}"
                 action="{{ actions['title_3'] }}" />
-            <label text="Enviro" pos="62 -4" z-index="1" size="12 4" textsize="1" valign="center2" halign="center" textfont="RobotoCondensed" focusareacolor1="{{colors.button_bg}}" focusareacolor2="{{colors.button_bg_hover}}" textcolor="{{colors.button_text}}"
+            <label text="Map Likes" pos="62 -4" z-index="1" size="12 4" textsize="1" valign="center2" halign="center" textfont="RobotoCondensed" focusareacolor1="{{colors.button_bg}}" focusareacolor2="{{colors.button_bg_hover}}" textcolor="{{colors.button_text}}"
                 action="{{ actions['title_4'] }}" />
-            <label text="Vehicle" pos="75 -4" z-index="1" size="12 4" textsize="1" valign="center2" halign="center" textfont="RobotoCondensed" focusareacolor1="{{colors.button_bg}}" focusareacolor2="{{colors.button_bg_hover}}" textcolor="{{colors.button_text}}"
+            <label text="Rank" pos="75 -4" z-index="1" size="12 4" textsize="1" valign="center2" halign="center" textfont="RobotoCondensed" focusareacolor1="{{colors.button_bg}}" focusareacolor2="{{colors.button_bg_hover}}" textcolor="{{colors.button_text}}"
                 action="{{ actions['title_5'] }}" />
-            <label text="Rank" pos="88 -4" z-index="1" size="12 4" textsize="1" valign="center2" halign="center" textfont="RobotoCondensed" focusareacolor1="{{colors.button_bg}}" focusareacolor2="{{colors.button_bg_hover}}" textcolor="{{colors.button_text}}"
+            <label text="Medal" pos="88 -4" z-index="1" size="12 4" textsize="1" valign="center2" halign="center" textfont="RobotoCondensed" focusareacolor1="{{colors.button_bg}}" focusareacolor2="{{colors.button_bg_hover}}" textcolor="{{colors.button_text}}"
                 action="{{ actions['title_6'] }}" />
-            <label text="Medal" pos="101 -4" z-index="1" size="12 4" textsize="1" valign="center2" halign="center" textfont="RobotoCondensed" focusareacolor1="{{colors.button_bg}}" focusareacolor2="{{colors.button_bg_hover}}" textcolor="{{colors.button_text}}"
-                action="{{ actions['title_7'] }}" />
         </frame>
     </frame>
     

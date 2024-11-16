@@ -30,8 +30,7 @@ export default class Maps extends Plugin {
             { key: "Name", title: "Name", width: 50, action: "Queue" },
             { key: "AuthorName", title: "Author", width: 30 },
             { key: "ATime", title: "Author Time", width: 20 },
-            { key: "Environnement", title: "Environment", width: 15 },
-            { key: "Vehicle", title: "Vehicle", width: 15 },
+            { key: "MapLikes", title: "MapLikes", width: 15 },
             { key: "Rank", title: "Rank", width: 5 },
             { key: "Medal", title: "Medal", width: 5 }            
         ]);
@@ -46,7 +45,7 @@ export default class Maps extends Plugin {
             { key: "Index", title: "#", width: 4 },
             { key: "Name", title: "Name", width: 50, action: "Queue" },
             { key: "AuthorName", title: "Author", width: 30 },
-            { key: "Environnement", title: "Environment", width: 15 },
+            { key: "MapLikes", title: "MapLikes", width: 15 },
             { key: "ATime", title: "Author Time", width: 20 }
         ]);
         window.title = "Maps [" + tmc.maps.getMapCount() + "]";
