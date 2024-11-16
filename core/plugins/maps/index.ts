@@ -45,8 +45,8 @@ export default class Maps extends Plugin {
             { key: "Index", title: "#", width: 4 },
             { key: "Name", title: "Name", width: 50, action: "Queue" },
             { key: "AuthorName", title: "Author", width: 30 },
-            { key: "MapLikes", title: "MapLikes", width: 15 },
-            { key: "ATime", title: "Author Time", width: 20 }
+            { key: "ATime", title: "Author Time", width: 20 },
+            { key: "MapLikes", title: "MapLikes", width: 15 }
         ]);
         window.title = "Maps [" + tmc.maps.getMapCount() + "]";
         window.setActions(["Remove"]);

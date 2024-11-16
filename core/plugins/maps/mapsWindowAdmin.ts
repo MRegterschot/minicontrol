@@ -1,3 +1,4 @@
+import MapLikes from '@core/schemas/maplikes.model';
 import Confirm from '../../ui/confirm';
 import ListWindow from '../../ui/listwindow';
 import { formatTime, escape, clone, removeColors } from '../../utils';
@@ -23,6 +24,7 @@ export default class MapsWindowAdmin extends ListWindow {
                         Name: escape(map.Name),
                         AuthorName: escape(map.AuthorNickname || map.Author || ""),
                         ATime: formatTime(map.AuthorTime || map.GoldTime),
+                        MapLikes: await this.getMapLikes(map.UId)
                     })
                 );
             }
@@ -46,4 +48,31 @@ export default class MapsWindowAdmin extends ListWindow {
         await tmc.chatCmd.execute(login, action);
         await this.uiPaginate(login, "", []);
     }   
+
+    async getMapLikes(mapUid: string) {
+        const likes = await MapLikes.findAll({
+            where: {
+                mapUuid: mapUid,
+            },
+        });
+
+        let positive = 0;
+        let total = 0;
+
+        for (const like of likes) {
+            if (!like.vote) continue;
+            if (like.vote > 0) {
+                positive++;
+            }
+            total++;
+        }
+
+        let percentage = "No Votes";
+        
+        if (total > 0) {
+            percentage = ((positive / total * 100).toFixed(0) || 0) + "%";
+        }
+
+        return percentage;
+    }
 }
