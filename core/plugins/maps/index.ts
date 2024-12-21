@@ -49,7 +49,7 @@ export default class Maps extends Plugin {
             { key: "MapLikes", title: "MapLikes", width: 15 }
         ]);
         window.title = "Maps [" + tmc.maps.getMapCount() + "]";
-        window.setActions(["Remove"]);
+        window.setActions(["Purge", "Remove"]);
         await window.display()
     }
 

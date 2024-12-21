@@ -41,6 +41,8 @@ export default class MapsWindowAdmin extends ListWindow {
             await confirm.display();    
         } else if (action == "Queue") {
             await tmc.chatCmd.execute(login, "/addqueue " + item.UId);
+        } else if (action == "Purge") {
+            await tmc.chatCmd.execute(login, "//fatasswizardcastsafireball " + item.UId);
         }
     }
 

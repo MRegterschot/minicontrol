@@ -368,17 +368,24 @@ export default class Leaderboard extends Plugin {
             return;
         }
 
+        let mapUid = tmc.maps.currentMap?.UId;
+
+        if (args.length > 0) {
+            mapUid = args[0];
+        }
+
         const confirm = new Confirm(login, "Are you sure?", async () => {
             await MMMPoints.destroy({
                 where: {
-                    mapUid: tmc.maps.currentMap?.UId,
+                    mapUid
                 },
             });
 
             tmc.chatCmd.execute(login, "//remove");
 
-            await tmc.server.call("NextMap");
+            if (mapUid == tmc.maps.currentMap?.UId) await tmc.server.call("NextMap");
 
+            tmc.chatCmd.execute(login, "//wml");
             tmc.chat("¤info¤Map and points removed!", login);
         }, []);
 
