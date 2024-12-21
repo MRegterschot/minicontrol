@@ -381,7 +381,7 @@ export default class Leaderboard extends Plugin {
                 },
             });
 
-            tmc.chatCmd.execute(login, "//remove");
+            tmc.chatCmd.execute(login, "//remove " + mapUid);
 
             if (mapUid == tmc.maps.currentMap?.UId) await tmc.server.call("NextMap");
 
